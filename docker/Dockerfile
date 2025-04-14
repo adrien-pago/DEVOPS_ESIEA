@@ -22,11 +22,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy existing application directory
-COPY . .
+# Copy composer files first to leverage Docker cache
+COPY composer.json composer.lock ./
 
 # Install dependencies
-RUN composer install
+RUN composer install --no-scripts --no-autoloader
+
+# Copy the rest of the application
+COPY . .
+
+# Generate autoloader and run scripts
+RUN composer dump-autoload --optimize && composer run-script post-install-cmd
 
 # Change ownership of our applications
 RUN chown -R www-data:www-data /var/www/html 
