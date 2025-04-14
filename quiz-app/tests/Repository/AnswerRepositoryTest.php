@@ -5,13 +5,14 @@ namespace App\Tests\Repository;
 use App\Entity\Answer;
 use App\Entity\Question;
 use App\Entity\Quiz;
+use App\Entity\User;
 use App\Repository\AnswerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class AnswerRepositoryTest extends KernelTestCase
 {
-    private EntityManagerInterface $entityManager;
+    private ?EntityManagerInterface $entityManager = null;
     private AnswerRepository $answerRepository;
 
     protected function setUp(): void
@@ -19,13 +20,27 @@ class AnswerRepositoryTest extends KernelTestCase
         $kernel = self::bootKernel();
         $this->entityManager = $kernel->getContainer()->get('doctrine')->getManager();
         $this->answerRepository = $this->entityManager->getRepository(Answer::class);
+        
+        // Clean up the database
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
     }
 
     public function testFindByQuestion(): void
     {
+        // Create a user first
+        $user = new User();
+        $user->setUsername('testuser');
+        $user->setPassword('password123');
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
         // Create test data
         $quiz = new Quiz();
         $quiz->setTheme('Test Theme');
+        $quiz->setCreator($user);
         $this->entityManager->persist($quiz);
 
         $question = new Question();
@@ -52,20 +67,21 @@ class AnswerRepositoryTest extends KernelTestCase
         $this->assertCount(2, $answers);
         $this->assertContains($answer1, $answers);
         $this->assertContains($answer2, $answers);
-
-        // Cleanup
-        $this->entityManager->remove($answer1);
-        $this->entityManager->remove($answer2);
-        $this->entityManager->remove($question);
-        $this->entityManager->remove($quiz);
-        $this->entityManager->flush();
     }
 
     public function testGetCorrectAnswersCount(): void
     {
+        // Create a user first
+        $user = new User();
+        $user->setUsername('testuser');
+        $user->setPassword('password123');
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
         // Create test data
         $quiz = new Quiz();
         $quiz->setTheme('Test Theme');
+        $quiz->setCreator($user);
         $this->entityManager->persist($quiz);
 
         $question = new Question();
@@ -95,13 +111,20 @@ class AnswerRepositoryTest extends KernelTestCase
         // Test getCorrectAnswersCount
         $correctCount = $this->answerRepository->getCorrectAnswersCount($question);
         $this->assertEquals(2, $correctCount);
+    }
 
-        // Cleanup
-        $this->entityManager->remove($answer1);
-        $this->entityManager->remove($answer2);
-        $this->entityManager->remove($answer3);
-        $this->entityManager->remove($question);
-        $this->entityManager->remove($quiz);
-        $this->entityManager->flush();
+    protected function tearDown(): void
+    {
+        // Clean up the database
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
+        
+        parent::tearDown();
+        
+        // Close the entity manager
+        $this->entityManager->close();
+        $this->entityManager = null;
     }
 } 

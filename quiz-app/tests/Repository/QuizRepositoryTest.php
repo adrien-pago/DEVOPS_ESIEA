@@ -3,13 +3,14 @@
 namespace App\Tests\Repository;
 
 use App\Entity\Quiz;
+use App\Entity\User;
 use App\Repository\QuizRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class QuizRepositoryTest extends KernelTestCase
 {
-    private EntityManagerInterface $entityManager;
+    private ?EntityManagerInterface $entityManager = null;
     private QuizRepository $quizRepository;
 
     protected function setUp(): void
@@ -23,13 +24,21 @@ class QuizRepositoryTest extends KernelTestCase
         
         // Ensure we're starting with a clean database
         $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
     }
 
     public function testFindByTheme()
     {
+        // Create a user first
+        $user = new User();
+        $user->setUsername('testuser');
+        $user->setPassword('password123');
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
         $quiz = new Quiz();
         $quiz->setTheme('Géographie');
-        $quiz->setTitle('Test Quiz');
+        $quiz->setCreator($user);
         $quiz->setModerated(true);
 
         $this->entityManager->persist($quiz);
@@ -42,9 +51,16 @@ class QuizRepositoryTest extends KernelTestCase
 
     public function testFindModerated()
     {
+        // Create a user first
+        $user = new User();
+        $user->setUsername('testuser');
+        $user->setPassword('password123');
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
         $quiz = new Quiz();
         $quiz->setTheme('Histoire');
-        $quiz->setTitle('Test Quiz Modéré');
+        $quiz->setCreator($user);
         $quiz->setModerated(true);
 
         $this->entityManager->persist($quiz);
@@ -59,6 +75,7 @@ class QuizRepositoryTest extends KernelTestCase
     {
         // Clean up the database
         $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
         
         parent::tearDown();
         
