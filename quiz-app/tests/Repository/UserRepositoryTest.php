@@ -23,6 +23,7 @@ class UserRepositoryTest extends KernelTestCase
         // Create a test user
         $user = new User();
         $user->setUsername('testuser');
+        $user->setEmail('testuser@example.com');
         $user->setPassword('password123');
 
         // Persist the user
