@@ -23,17 +23,20 @@ class ScoreFunctionalTest extends WebTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        
+        $uniqueId = uniqid();
         $this->client = static::createClient([], [
-            'PHP_AUTH_USER' => 'score_test@example.com',
+            'PHP_AUTH_USER' => 'score_test_' . $uniqueId . '@example.com',
             'PHP_AUTH_PW' => 'password123'
         ]);
+        
         $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $this->passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
 
         // Create test user
         $this->user = new User();
-        $this->user->setEmail('score_test@example.com');
-        $this->user->setUsername('scoreuser_test');
+        $this->user->setEmail('score_test_' . $uniqueId . '@example.com');
+        $this->user->setUsername('scoreuser_test_' . $uniqueId);
         $hashedPassword = $this->passwordHasher->hashPassword($this->user, 'password123');
         $this->user->setPassword($hashedPassword);
         $this->entityManager->persist($this->user);
@@ -105,16 +108,28 @@ class ScoreFunctionalTest extends WebTestCase
 
     protected function tearDown(): void
     {
-        if ($this->quiz) {
-            $this->entityManager->remove($this->quiz);
-        }
-        if ($this->user) {
-            $this->entityManager->remove($this->user);
-        }
-        $this->entityManager->flush();
         parent::tearDown();
-        $this->entityManager->close();
-        $this->entityManager = null;
+        
+        if ($this->entityManager) {
+            if ($this->quiz) {
+                foreach ($this->quiz->getQuestions() as $question) {
+                    foreach ($question->getAnswers() as $answer) {
+                        $this->entityManager->remove($answer);
+                    }
+                    $this->entityManager->remove($question);
+                }
+                $this->entityManager->remove($this->quiz);
+            }
+            
+            if ($this->user) {
+                $this->entityManager->remove($this->user);
+            }
+            
+            $this->entityManager->flush();
+            $this->entityManager->close();
+            $this->entityManager = null;
+        }
+        
         $this->client = null;
     }
 

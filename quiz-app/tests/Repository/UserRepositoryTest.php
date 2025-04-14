@@ -14,25 +14,33 @@ class UserRepositoryTest extends KernelTestCase
 
     protected function setUp(): void
     {
-        $kernel = self::bootKernel();
-        $this->entityManager = $kernel->getContainer()
-            ->get('doctrine')
-            ->getManager();
-        $this->userRepository = $this->entityManager->getRepository(User::class);
-
-        // Clean up the database
+        parent::setUp();
+        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $this->userRepository = static::getContainer()->get(UserRepository::class);
+        
+        // Nettoyer la base de données avant chaque test
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
+        $this->entityManager->flush();
     }
 
     protected function tearDown(): void
     {
-        // Clean up the database
+        parent::tearDown();
+        
         if ($this->entityManager) {
+            // Nettoyer la base de données après chaque test
+            $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
+            $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
+            $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
             $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
+            $this->entityManager->flush();
+            
             $this->entityManager->close();
             $this->entityManager = null;
         }
-        parent::tearDown();
     }
 
     public function testFindByUsername(): void
