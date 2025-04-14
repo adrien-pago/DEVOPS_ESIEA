@@ -21,16 +21,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 
 # Copy composer files first
-COPY composer.json composer.lock /var/www/
+COPY composer.json composer.lock ./
 
 # Verify composer files are present
-RUN ls -la /var/www/composer.json
+RUN ls -la composer.json
 
 # Install dependencies
-RUN cd /var/www && composer install --no-dev --optimize-autoloader --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Copy the rest of the application
-COPY . /var/www/
+COPY . .
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www
