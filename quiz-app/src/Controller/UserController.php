@@ -45,7 +45,16 @@ class UserController extends AbstractController
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        return $this->json(['id' => $user->getId()], Response::HTTP_CREATED);
+        // Générer un token après l'inscription
+        $token = base64_encode(json_encode([
+            'user_id' => $user->getId(),
+            'email' => $user->getEmail()
+        ]));
+
+        return $this->json([
+            'id' => $user->getId(),
+            'token' => $token
+        ], Response::HTTP_CREATED);
     }
 
     #[Route('/login', name: 'user_login', methods: ['POST'])]
