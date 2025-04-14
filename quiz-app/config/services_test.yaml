@@ -1,0 +1,8 @@
+parameters:
+    kernel.secret: 'test_secret_for_testing'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: true 

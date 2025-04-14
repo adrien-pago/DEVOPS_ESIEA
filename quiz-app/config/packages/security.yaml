@@ -25,34 +25,27 @@ security:
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            remember_me:
+                secret: 'ThisIsNotASecretChangeIt'
+                lifetime: 604800
+                path: /
+            logout:
+                path: /api/logout
+                target: /api/login
 
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
+    # activate different ways to authenticate
+    # https://symfony.com/doc/current/security.html#the-firewall
 
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+    # https://symfony.com/doc/current/security/impersonating_user.html
+    # switch_user: true
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
+        - { path: ^/api/logout, roles: ROLE_USER }
+        - { path: ^/api/quiz, roles: ROLE_USER }
+        - { path: ^/api/user, roles: ROLE_USER }
+        - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api, roles: ROLE_USER }
-
-when@test:
-    security:
-        password_hashers:
-            # By default, password hashers are resource intensive and take time. This is
-            # important to generate secure password hashes. In tests however, secure hashes
-            # are not important, waste resources and increase test times. The following
-            # reduces the work factor to the lowest possible values.
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
-        access_control:
-            - { path: ^/api/login, roles: PUBLIC_ACCESS }
-            - { path: ^/api/register, roles: PUBLIC_ACCESS }
-            - { path: ^/api/logout, roles: ROLE_USER }
-            - { path: ^/api/quiz, roles: ROLE_USER }
-            - { path: ^/api/user, roles: ROLE_USER }
-            - { path: ^/api/admin, roles: ROLE_ADMIN }
-            - { path: ^/api, roles: ROLE_USER }
