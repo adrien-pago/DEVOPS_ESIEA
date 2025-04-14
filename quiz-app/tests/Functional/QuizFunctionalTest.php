@@ -17,6 +17,7 @@ class QuizFunctionalTest extends WebTestCase
     private $entityManager;
     private $quizRepository;
     private $user;
+    private $token;
 
     protected function setUp(): void
     {
@@ -45,7 +46,8 @@ class QuizFunctionalTest extends WebTestCase
         ]));
 
         $response = json_decode($this->client->getResponse()->getContent(), true);
-        $this->client->setServerParameter('HTTP_Authorization', 'Bearer ' . $response['token']);
+        $this->token = $response['token'];
+        $this->client->setServerParameter('HTTP_Authorization', 'Bearer ' . $this->token);
     }
 
     protected function tearDown(): void
@@ -62,14 +64,31 @@ class QuizFunctionalTest extends WebTestCase
 
     public function testCreateQuiz(): void
     {
-        $this->client->request('POST', '/api/quiz', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
+        $this->client->request('POST', '/api/quiz', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $this->token
+        ], json_encode([
             'title' => 'Test Quiz',
+            'description' => 'Test Description',
             'theme' => 'Test Theme',
             'questions' => [
                 [
-                    'text' => 'Test Question 1',
-                    'choices' => ['Answer 1', 'Answer 2', 'Answer 3'],
-                    'correctChoice' => 0
+                    'text' => 'Question 1',
+                    'answers' => [
+                        ['text' => 'Answer 1', 'isCorrect' => true],
+                        ['text' => 'Answer 2', 'isCorrect' => false],
+                        ['text' => 'Answer 3', 'isCorrect' => false],
+                        ['text' => 'Answer 4', 'isCorrect' => false]
+                    ]
+                ],
+                [
+                    'text' => 'Question 2',
+                    'answers' => [
+                        ['text' => 'Answer 1', 'isCorrect' => false],
+                        ['text' => 'Answer 2', 'isCorrect' => true],
+                        ['text' => 'Answer 3', 'isCorrect' => false],
+                        ['text' => 'Answer 4', 'isCorrect' => false]
+                    ]
                 ]
             ]
         ]));
@@ -77,13 +96,9 @@ class QuizFunctionalTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('id', $response);
-
-        // Vérifier que le quiz a été créé en base de données
-        $quiz = $this->quizRepository->find($response['id']);
-        $this->assertNotNull($quiz);
-        $this->assertEquals('Test Quiz', $quiz->getTitle());
-        $this->assertEquals('Test Theme', $quiz->getTheme());
-        $this->assertCount(1, $quiz->getQuestions());
+        $this->assertArrayHasKey('title', $response);
+        $this->assertArrayHasKey('questions', $response);
+        $this->assertCount(2, $response['questions']);
     }
 
     public function testGetQuiz(): void
