@@ -10,7 +10,7 @@ services:
     depends_on:
       - database
     environment:
-      DATABASE_URL: "mysql://app:ChangeMe123!@database:3306/app?serverVersion=8.0"
+      DATABASE_URL: "mysql://app:Password123!@database:3306/app?serverVersion=8.0"
 
   nginx:
     image: nginx:alpine
@@ -25,10 +25,10 @@ services:
   database:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: ChangeMe123!
+      MYSQL_ROOT_PASSWORD: Password123!
       MYSQL_DATABASE: app
       MYSQL_USER: app
-      MYSQL_PASSWORD: ChangeMe123!
+      MYSQL_PASSWORD: Password123!
     ports:
       - "3306:3306"
     volumes:
