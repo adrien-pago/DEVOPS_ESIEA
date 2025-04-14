@@ -86,6 +86,7 @@ class UserFunctionalTest extends WebTestCase
         ]));
 
         $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('token', $response);
         $token = $response['token'];
 
         // Accéder à une route protégée
@@ -114,6 +115,7 @@ class UserFunctionalTest extends WebTestCase
         ]));
 
         $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('token', $response);
         $token = $response['token'];
 
         // Mettre à jour le profil

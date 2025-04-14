@@ -44,16 +44,16 @@ class UserController extends AbstractController
 
     private function generateToken(User $user): string
     {
-        if ($this->params->get('kernel.environment') === 'test') {
-            // En environnement de test, utiliser un token simple
+        try {
+            // Essayer d'utiliser JWT
+            return $this->jwtManager->create($user);
+        } catch (\Exception $e) {
+            // En cas d'erreur, utiliser un token simple
             return base64_encode(json_encode([
                 'user_id' => $user->getId(),
                 'email' => $user->getEmail()
             ]));
         }
-        
-        // En production, utiliser JWT
-        return $this->jwtManager->create($user);
     }
 
     #[Route('/register', name: 'user_register', methods: ['POST'])]
