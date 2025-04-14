@@ -19,7 +19,7 @@ class Quiz
     private ?string $theme = null;
 
     #[ORM\Column]
-    private ?bool $isModerated = false;
+    private ?bool $moderated = false;
 
     #[ORM\OneToMany(mappedBy: 'quiz', targetEntity: Question::class, orphanRemoval: true)]
     private Collection $questions;
@@ -47,12 +47,12 @@ class Quiz
 
     public function isModerated(): ?bool
     {
-        return $this->isModerated;
+        return $this->moderated;
     }
 
-    public function setIsModerated(bool $isModerated): static
+    public function setModerated(bool $moderated): static
     {
-        $this->isModerated = $isModerated;
+        $this->moderated = $moderated;
         return $this;
     }
 

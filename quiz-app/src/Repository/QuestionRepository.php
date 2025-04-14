@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Question;
+use App\Entity\Quiz;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -37,5 +38,25 @@ class QuestionRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function findByQuiz(Quiz $quiz): array
+    {
+        return $this->createQueryBuilder('q')
+            ->andWhere('q.quiz = :quiz')
+            ->setParameter('quiz', $quiz)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findRandomQuestions(Quiz $quiz, int $limit): array
+    {
+        return $this->createQueryBuilder('q')
+            ->andWhere('q.quiz = :quiz')
+            ->setParameter('quiz', $quiz)
+            ->orderBy('RAND()')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 } 

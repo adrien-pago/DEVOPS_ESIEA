@@ -38,4 +38,22 @@ class QuizRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    public function findByTheme(string $theme): array
+    {
+        return $this->createQueryBuilder('q')
+            ->andWhere('q.theme = :theme')
+            ->setParameter('theme', $theme)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findModerated(): array
+    {
+        return $this->createQueryBuilder('q')
+            ->andWhere('q.moderated = :moderated')
+            ->setParameter('moderated', true)
+            ->getQuery()
+            ->getResult();
+    }
 } 
