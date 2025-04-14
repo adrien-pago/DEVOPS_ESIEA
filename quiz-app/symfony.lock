@@ -15,6 +15,9 @@
             "./migrations/.gitignore"
         ]
     },
+    "lexik/jwt-authentication-bundle": {
+        "version": "v2.18.1"
+    },
     "phpunit/phpunit": {
         "version": "11.5",
         "recipe": {

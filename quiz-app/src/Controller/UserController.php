@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Security;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 #[Route('/api')]
 class UserController extends AbstractController
@@ -19,15 +21,35 @@ class UserController extends AbstractController
     private $entityManager;
     private $passwordHasher;
     private $security;
+    private $jwtManager;
+    private $params;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
-        Security $security
+        Security $security,
+        JWTTokenManagerInterface $jwtManager,
+        ParameterBagInterface $params
     ) {
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
         $this->security = $security;
+        $this->jwtManager = $jwtManager;
+        $this->params = $params;
+    }
+
+    private function generateToken(User $user): string
+    {
+        if ($this->params->get('kernel.environment') === 'test') {
+            // En environnement de test, utiliser un token simple
+            return base64_encode(json_encode([
+                'user_id' => $user->getId(),
+                'email' => $user->getEmail()
+            ]));
+        }
+        
+        // En production, utiliser JWT
+        return $this->jwtManager->create($user);
     }
 
     #[Route('/register', name: 'user_register', methods: ['POST'])]
@@ -45,11 +67,7 @@ class UserController extends AbstractController
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        // Générer un token après l'inscription
-        $token = base64_encode(json_encode([
-            'user_id' => $user->getId(),
-            'email' => $user->getEmail()
-        ]));
+        $token = $this->generateToken($user);
 
         return $this->json([
             'id' => $user->getId(),
@@ -68,11 +86,7 @@ class UserController extends AbstractController
             return $this->json(['message' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Pour les tests, on retourne un token simple
-        $token = base64_encode(json_encode([
-            'user_id' => $user->getId(),
-            'email' => $user->getEmail()
-        ]));
+        $token = $this->generateToken($user);
         
         return $this->json(['token' => $token]);
     }
