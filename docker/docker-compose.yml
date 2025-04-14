@@ -6,7 +6,7 @@ services:
       context: ../quiz-app
       dockerfile: ../docker/Dockerfile
     volumes:
-      - ../quiz-app:/var/www/html
+      - ../quiz-app:/var/www/html:cached
     depends_on:
       - database
     environment:
@@ -17,7 +17,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ../quiz-app:/var/www/html
+      - ../quiz-app:/var/www/html:cached
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - php

@@ -49,4 +49,4 @@ Pour lancer les tests : `php bin/phpunit`
 - Branche `main` : code en production
 - Branches feature : développement des nouvelles fonctionnalités
 - Tests automatisés avant merge sur main
-- CI/CD avec Docker 
+- CI/CD avec Docker.
