@@ -6,9 +6,12 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+#[ORM\Table(name: '`user`')]
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -16,22 +19,73 @@ class User
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
-    private ?string $username = null;
+    private ?string $email = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column]
+    private array $roles = [];
+
+    #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\OneToMany(mappedBy: 'creator', targetEntity: Quiz::class, orphanRemoval: true)]
-    private Collection $quizzes;
+    #[ORM\Column(length: 255)]
+    private ?string $username = null;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: QuizResult::class)]
+    private Collection $quizResults;
 
     public function __construct()
     {
-        $this->quizzes = new ArrayCollection();
+        $this->quizResults = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
+        return $this;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER';
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+        return $this;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+        return $this;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
     }
 
     public function getUsername(): ?string
@@ -42,49 +96,33 @@ class User
     public function setUsername(string $username): static
     {
         $this->username = $username;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): static
-    {
-        $this->password = $password;
-
         return $this;
     }
 
     /**
-     * @return Collection<int, Quiz>
+     * @return Collection<int, QuizResult>
      */
-    public function getQuizzes(): Collection
+    public function getQuizResults(): Collection
     {
-        return $this->quizzes;
+        return $this->quizResults;
     }
 
-    public function addQuiz(Quiz $quiz): static
+    public function addQuizResult(QuizResult $quizResult): static
     {
-        if (!$this->quizzes->contains($quiz)) {
-            $this->quizzes->add($quiz);
-            $quiz->setCreator($this);
+        if (!$this->quizResults->contains($quizResult)) {
+            $this->quizResults->add($quizResult);
+            $quizResult->setUser($this);
         }
-
         return $this;
     }
 
-    public function removeQuiz(Quiz $quiz): static
+    public function removeQuizResult(QuizResult $quizResult): static
     {
-        if ($this->quizzes->removeElement($quiz)) {
-            // set the owning side to null (unless already changed)
-            if ($quiz->getCreator() === $this) {
-                $quiz->setCreator(null);
+        if ($this->quizResults->removeElement($quizResult)) {
+            if ($quizResult->getUser() === $this) {
+                $quizResult->setUser(null);
             }
         }
-
         return $this;
     }
 } 

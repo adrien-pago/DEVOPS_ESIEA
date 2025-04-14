@@ -1,36 +1,26 @@
 <?php
 
+use App\Kernel;
+use Symfony\Component\Dotenv\Dotenv;
+
 require dirname(__DIR__).'/vendor/autoload.php';
 
-use Symfony\Component\Dotenv\Dotenv;
-use Doctrine\ORM\Tools\SchemaTool;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+(new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
 
-// Load environment variables
-$dotenv = new Dotenv();
-$dotenv->loadEnv(dirname(__DIR__).'/.env');
+$_SERVER['APP_ENV'] = 'test';
 
-// Create container
-$container = new ContainerBuilder();
-$configurator = new ContainerConfigurator($container, new FileLocator(dirname(__DIR__)), null);
-$loader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__)));
+$kernel = new Kernel('test', true);
+$kernel->boot();
 
-// Load services
-$loader->load('config/services.yaml');
-$loader->load('config/packages/doctrine.yaml');
-$loader->load('config/packages/test/doctrine.yaml');
+$container = $kernel->getContainer();
+$entityManager = $container->get('doctrine')->getManager();
 
-// Get EntityManager
-$entityManager = $container->get(EntityManagerInterface::class);
-
-// Create schema
-$schemaTool = new SchemaTool($entityManager);
+// Supprimer le schéma existant
 $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
+$schemaTool = new \Doctrine\ORM\Tools\SchemaTool($entityManager);
+$schemaTool->dropSchema($metadata);
 
-echo "Creating database schema...\n";
+// Créer le nouveau schéma
 $schemaTool->createSchema($metadata);
+
 echo "Schema created successfully!\n"; 

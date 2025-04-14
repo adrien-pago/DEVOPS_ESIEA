@@ -1,7 +1,7 @@
 # Use PHP 8.2 FPM as base image
 FROM php:8.2-fpm
 
-# Install system dependencies
+# Install system dependencies and SSL certificates
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -10,12 +10,17 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libonig-dev \
+    ca-certificates \
+    && update-ca-certificates \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Configure Composer to ignore SSL verification temporarily
+RUN composer config -g disable-tls true
 
 # Set working directory
 WORKDIR /var/www

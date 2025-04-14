@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     zip \
-    unzip
+    unzip \
+    ca-certificates
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -26,7 +27,10 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 
 # Install dependencies
-RUN composer install --no-scripts --no-autoloader
+RUN composer config -g disable-tls false \
+    && composer require symfony/security-bundle \
+    && composer require lexik/jwt-authentication-bundle \
+    && composer install --no-scripts --no-autoloader
 
 # Copy the rest of the application
 COPY . .

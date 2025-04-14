@@ -18,7 +18,7 @@ class Answer
     private ?Question $question = null;
 
     #[ORM\Column]
-    private ?bool $isCorrect = null;
+    private ?int $selectedChoice = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $answeredAt = null;
@@ -44,14 +44,14 @@ class Answer
         return $this;
     }
 
-    public function isCorrect(): ?bool
+    public function getSelectedChoice(): ?int
     {
-        return $this->isCorrect;
+        return $this->selectedChoice;
     }
 
-    public function setIsCorrect(bool $isCorrect): static
+    public function setSelectedChoice(int $selectedChoice): static
     {
-        $this->isCorrect = $isCorrect;
+        $this->selectedChoice = $selectedChoice;
         return $this;
     }
 
