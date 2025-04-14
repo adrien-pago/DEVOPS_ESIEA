@@ -58,9 +58,9 @@ class QuizTest extends TestCase
 
         // Simuler des réponses toutes correctes
         $answers = [
-            $question1->getId() => 0,
-            $question2->getId() => 1,
-            $question3->getId() => 2
+            'Question 1' => 0,
+            'Question 2' => 1,
+            'Question 3' => 2
         ];
 
         $score = $this->quiz->calculateScore($answers);
@@ -90,9 +90,9 @@ class QuizTest extends TestCase
 
         // Simuler des réponses avec seulement une bonne réponse
         $answers = [
-            $question1->getId() => 0, // Correct
-            $question2->getId() => 2, // Incorrect
-            $question3->getId() => 1  // Incorrect
+            'Question 1' => 0, // Correct
+            'Question 2' => 2, // Incorrect
+            'Question 3' => 1  // Incorrect
         ];
 
         $score = $this->quiz->calculateScore($answers);
@@ -122,8 +122,8 @@ class QuizTest extends TestCase
 
         // Simuler des réponses avec une réponse manquante
         $answers = [
-            $question1->getId() => 0, // Correct
-            $question2->getId() => 1  // Correct
+            'Question 1' => 0, // Correct
+            'Question 2' => 1  // Correct
             // Question 3 manquante
         ];
 
