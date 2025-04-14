@@ -5,13 +5,12 @@ namespace App\Tests\Repository;
 use App\Entity\Question;
 use App\Entity\Quiz;
 use App\Repository\QuestionRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class QuestionRepositoryTest extends KernelTestCase
 {
-    private EntityManagerInterface $entityManager;
-    private QuestionRepository $questionRepository;
+    private $entityManager;
+    private $questionRepository;
 
     protected function setUp(): void
     {

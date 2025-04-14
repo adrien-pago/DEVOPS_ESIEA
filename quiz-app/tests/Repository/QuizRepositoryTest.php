@@ -4,13 +4,12 @@ namespace App\Tests\Repository;
 
 use App\Entity\Quiz;
 use App\Repository\QuizRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class QuizRepositoryTest extends KernelTestCase
 {
-    private EntityManagerInterface $entityManager;
-    private QuizRepository $quizRepository;
+    private $entityManager;
+    private $quizRepository;
 
     protected function setUp(): void
     {
@@ -21,13 +20,13 @@ class QuizRepositoryTest extends KernelTestCase
 
     public function testFindByTheme(): void
     {
-        // Créer un quiz
+        // Créer un quiz de test
         $quiz = new Quiz();
         $quiz->setTheme('Géographie');
         $this->entityManager->persist($quiz);
         $this->entityManager->flush();
 
-        // Rechercher les quiz par thème
+        // Rechercher le quiz par thème
         $foundQuizzes = $this->quizRepository->findByTheme('Géographie');
         
         $this->assertCount(1, $foundQuizzes);
@@ -48,10 +47,10 @@ class QuizRepositoryTest extends KernelTestCase
         $this->entityManager->flush();
 
         // Rechercher les quiz modérés
-        $foundQuizzes = $this->quizRepository->findModerated();
+        $moderatedQuizzes = $this->quizRepository->findModerated();
         
-        $this->assertCount(1, $foundQuizzes);
-        $this->assertTrue($foundQuizzes[0]->isModerated());
+        $this->assertCount(1, $moderatedQuizzes);
+        $this->assertTrue($moderatedQuizzes[0]->isModerated());
 
         // Nettoyer
         $this->entityManager->remove($quiz);
