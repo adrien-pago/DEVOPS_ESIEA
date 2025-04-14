@@ -5,26 +5,55 @@ namespace App\Tests\Functional;
 use App\Entity\Quiz;
 use App\Entity\Question;
 use App\Entity\Answer;
+use App\Entity\User;
 use App\Repository\QuizRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class QuizFunctionalTest extends WebTestCase
 {
     private $client;
     private $entityManager;
     private $quizRepository;
+    private $user;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
         $this->entityManager = static::getContainer()->get('doctrine')->getManager();
         $this->quizRepository = static::getContainer()->get(QuizRepository::class);
+
+        // Créer un utilisateur de test
+        $this->user = new User();
+        $this->user->setEmail('test@example.com');
+        $this->user->setPassword('password123');
+        $this->user->setRoles(['ROLE_USER']);
+
+        $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+        $hashedPassword = $passwordHasher->hashPassword($this->user, 'password123');
+        $this->user->setPassword($hashedPassword);
+
+        $this->entityManager->persist($this->user);
+        $this->entityManager->flush();
+
+        // Authentifier l'utilisateur
+        $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
+            'email' => 'test@example.com',
+            'password' => 'password123'
+        ]));
+
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->client->setServerParameter('HTTP_Authorization', 'Bearer ' . $response['token']);
     }
 
     protected function tearDown(): void
     {
         parent::tearDown();
+        if ($this->user) {
+            $this->entityManager->remove($this->user);
+            $this->entityManager->flush();
+        }
         $this->entityManager->close();
         $this->entityManager = null;
         $this->client = null;
