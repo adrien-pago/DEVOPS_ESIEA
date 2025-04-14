@@ -51,12 +51,8 @@ class QuestionRepository extends ServiceEntityRepository
 
     public function findRandomQuestions(Quiz $quiz, int $limit): array
     {
-        return $this->createQueryBuilder('q')
-            ->andWhere('q.quiz = :quiz')
-            ->setParameter('quiz', $quiz)
-            ->orderBy('RAND()')
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+        $questions = $this->findByQuiz($quiz);
+        shuffle($questions);
+        return array_slice($questions, 0, $limit);
     }
 } 

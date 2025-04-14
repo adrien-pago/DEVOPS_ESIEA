@@ -25,14 +25,13 @@ class QuizTest extends TestCase
 
     public function testQuizTheme(): void
     {
-        $theme = 'Mathématiques';
-        $this->quiz->setTheme($theme);
-        $this->assertEquals($theme, $this->quiz->getTheme());
+        $this->quiz->setTheme('Histoire');
+        $this->assertEquals('Histoire', $this->quiz->getTheme());
     }
 
     public function testQuizModeration(): void
     {
-        $this->quiz->setIsModerated(true);
+        $this->quiz->setModerated(true);
         $this->assertTrue($this->quiz->isModerated());
     }
 
