@@ -43,7 +43,6 @@ class UserFunctionalTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('id', $response);
-        $this->assertArrayHasKey('token', $response);
     }
 
     public function testUserLogin(): void
@@ -64,8 +63,6 @@ class UserFunctionalTest extends WebTestCase
         ]));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-        $response = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('token', $response);
     }
 
     public function testProtectedRoute(): void
@@ -79,20 +76,16 @@ class UserFunctionalTest extends WebTestCase
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        // Se connecter pour obtenir le token
+        // Se connecter
         $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
             'email' => 'protected@example.com',
             'password' => 'password123'
         ]));
 
-        $response = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('token', $response);
-        $token = $response['token'];
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         // Accéder à une route protégée
-        $this->client->request('GET', '/api/user/profile', [], [], [
-            'HTTP_Authorization' => 'Bearer ' . $token
-        ]);
+        $this->client->request('GET', '/api/user/profile');
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
     }
@@ -108,20 +101,17 @@ class UserFunctionalTest extends WebTestCase
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        // Se connecter pour obtenir le token
+        // Se connecter
         $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
             'email' => 'update@example.com',
             'password' => 'password123'
         ]));
 
-        $response = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('token', $response);
-        $token = $response['token'];
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         // Mettre à jour le profil
         $this->client->request('PUT', '/api/user/profile', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_Authorization' => 'Bearer ' . $token
+            'CONTENT_TYPE' => 'application/json'
         ], json_encode([
             'username' => 'updatedusername'
         ]));

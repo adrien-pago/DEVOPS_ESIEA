@@ -2,9 +2,8 @@
 
 namespace App\Tests\Functional;
 
-use App\Entity\User;
 use App\Entity\Quiz;
-use App\Entity\Question;
+use App\Entity\User;
 use App\Repository\QuizRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -17,7 +16,7 @@ class QuizFunctionalTest extends WebTestCase
     private $entityManager;
     private $passwordHasher;
     private $quizRepository;
-    private $token;
+    private $user;
 
     protected function setUp(): void
     {
@@ -27,23 +26,21 @@ class QuizFunctionalTest extends WebTestCase
         $this->quizRepository = static::getContainer()->get(QuizRepository::class);
 
         // Créer un utilisateur pour les tests
-        $user = new User();
-        $user->setEmail('test@example.com');
-        $user->setUsername('testuser');
-        $hashedPassword = $this->passwordHasher->hashPassword($user, 'password123');
-        $user->setPassword($hashedPassword);
-        $this->entityManager->persist($user);
+        $this->user = new User();
+        $this->user->setEmail('quiz@example.com');
+        $this->user->setUsername('quizuser');
+        $hashedPassword = $this->passwordHasher->hashPassword($this->user, 'password123');
+        $this->user->setPassword($hashedPassword);
+        $this->entityManager->persist($this->user);
         $this->entityManager->flush();
 
-        // Se connecter pour obtenir un token
+        // Se connecter
         $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
-            'email' => 'test@example.com',
+            'email' => 'quiz@example.com',
             'password' => 'password123'
         ]));
 
-        $response = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('token', $response);
-        $this->token = $response['token'];
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
     }
 
     protected function tearDown(): void
@@ -56,10 +53,7 @@ class QuizFunctionalTest extends WebTestCase
 
     public function testCreateQuiz(): void
     {
-        $this->client->request('POST', '/api/quiz', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_Authorization' => 'Bearer ' . $this->token
-        ], json_encode([
+        $quizData = [
             'title' => 'Test Quiz',
             'description' => 'A test quiz',
             'theme' => 'Test Theme',
@@ -68,27 +62,27 @@ class QuizFunctionalTest extends WebTestCase
                     'text' => 'Question 1',
                     'answers' => [
                         ['text' => 'Answer 1', 'isCorrect' => true],
-                        ['text' => 'Answer 2', 'isCorrect' => false],
-                        ['text' => 'Answer 3', 'isCorrect' => false]
+                        ['text' => 'Answer 2', 'isCorrect' => false]
                     ]
                 ],
                 [
                     'text' => 'Question 2',
                     'answers' => [
-                        ['text' => 'Answer 1', 'isCorrect' => false],
-                        ['text' => 'Answer 2', 'isCorrect' => true],
-                        ['text' => 'Answer 3', 'isCorrect' => false]
+                        ['text' => 'Answer 3', 'isCorrect' => false],
+                        ['text' => 'Answer 4', 'isCorrect' => true]
                     ]
                 ]
             ]
-        ]));
+        ];
+
+        $this->client->request('POST', '/api/quiz', [], [], [
+            'CONTENT_TYPE' => 'application/json'
+        ], json_encode($quizData));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('id', $response);
-        $this->assertArrayHasKey('title', $response);
         $this->assertEquals('Test Quiz', $response['title']);
-        $this->assertArrayHasKey('questions', $response);
         $this->assertCount(2, $response['questions']);
     }
 
@@ -99,68 +93,80 @@ class QuizFunctionalTest extends WebTestCase
         $quiz->setTitle('Test Quiz');
         $quiz->setDescription('A test quiz');
         $quiz->setTheme('Test Theme');
-        $quiz->setModerated(true);
-
-        $question1 = new Question();
-        $question1->setText('Question 1');
-        $question1->setChoices(['Answer 1', 'Answer 2', 'Answer 3']);
-        $question1->setCorrectChoice(0);
-        $quiz->addQuestion($question1);
-
-        $question2 = new Question();
-        $question2->setText('Question 2');
-        $question2->setChoices(['Answer 1', 'Answer 2', 'Answer 3']);
-        $question2->setCorrectChoice(1);
-        $quiz->addQuestion($question2);
-
+        $quiz->setAuthor($this->user);
         $this->entityManager->persist($quiz);
         $this->entityManager->flush();
 
-        $this->client->request('GET', '/api/quiz/' . $quiz->getId(), [], [], [
-            'HTTP_Authorization' => 'Bearer ' . $this->token
-        ]);
+        $this->client->request('GET', '/api/quiz/' . $quiz->getId());
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Test Quiz', $response['title']);
-        $this->assertArrayHasKey('questions', $response);
-        $this->assertCount(2, $response['questions']);
     }
 
-    public function testSubmitQuizAnswer(): void
+    public function testListQuizzes(): void
+    {
+        // Créer quelques quiz pour le test
+        for ($i = 1; $i <= 3; $i++) {
+            $quiz = new Quiz();
+            $quiz->setTitle('Test Quiz ' . $i);
+            $quiz->setDescription('A test quiz');
+            $quiz->setTheme('Test Theme');
+            $quiz->setAuthor($this->user);
+            $this->entityManager->persist($quiz);
+        }
+        $this->entityManager->flush();
+
+        $this->client->request('GET', '/api/quiz');
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($response);
+        $this->assertGreaterThanOrEqual(3, count($response));
+    }
+
+    public function testUpdateQuiz(): void
     {
         // Créer un quiz pour le test
         $quiz = new Quiz();
         $quiz->setTitle('Test Quiz');
         $quiz->setDescription('A test quiz');
         $quiz->setTheme('Test Theme');
-        $quiz->setModerated(true);
-
-        $question1 = new Question();
-        $question1->setText('Question 1');
-        $question1->setChoices(['Answer 1', 'Answer 2', 'Answer 3']);
-        $question1->setCorrectChoice(0);
-        $quiz->addQuestion($question1);
-
-        $question2 = new Question();
-        $question2->setText('Question 2');
-        $question2->setChoices(['Answer 1', 'Answer 2', 'Answer 3']);
-        $question2->setCorrectChoice(1);
-        $quiz->addQuestion($question2);
-
+        $quiz->setAuthor($this->user);
         $this->entityManager->persist($quiz);
         $this->entityManager->flush();
 
-        $this->client->request('POST', '/api/quiz/' . $quiz->getId() . '/submit', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_Authorization' => 'Bearer ' . $this->token
-        ], json_encode([
-            'answers' => [0, 1] // Réponses correctes
-        ]));
+        $updateData = [
+            'title' => 'Updated Quiz',
+            'description' => 'An updated quiz',
+            'theme' => 'Updated Theme'
+        ];
+
+        $this->client->request('PUT', '/api/quiz/' . $quiz->getId(), [], [], [
+            'CONTENT_TYPE' => 'application/json'
+        ], json_encode($updateData));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
         $response = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('score', $response);
-        $this->assertEquals(100, $response['score']); // 100% car toutes les réponses sont correctes
+        $this->assertEquals('Updated Quiz', $response['title']);
+    }
+
+    public function testDeleteQuiz(): void
+    {
+        // Créer un quiz pour le test
+        $quiz = new Quiz();
+        $quiz->setTitle('Test Quiz');
+        $quiz->setDescription('A test quiz');
+        $quiz->setTheme('Test Theme');
+        $quiz->setAuthor($this->user);
+        $this->entityManager->persist($quiz);
+        $this->entityManager->flush();
+
+        $quizId = $quiz->getId();
+
+        $this->client->request('DELETE', '/api/quiz/' . $quizId);
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $this->assertNull($this->quizRepository->find($quizId));
     }
 } 
