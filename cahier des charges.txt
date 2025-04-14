@@ -1,0 +1,39 @@
+ Une application de quiz
+
+Code : technologies libres
+Obligations : démarche devops, docker, automatisation, respect des priorités, API
+Un TP + Quelques questions
+Rendu : lien du git public
+
+Inclure dans votre git un fichier texte (ou sur le ReadMe), vos réponses aux questions suivantes d’après votre point de vue : 
+Comment définiriez-vous le Devops ?
+Qu’impose le Devops ?
+Quels sont les inconvénients ou les faiblesses du Devops ?
+Quel est votre avis sur le Devops ?
+Quels sont les tests primordiaux pour toute application ?
+
+Notre client veut créer une application Web pour créer des quiz en ligne. Chaque quiz est relatif à un thème et comporte entre trois et dix questions. Chaque question est à choix multiples avec une seule réponse correcte. Une question peut avoir entre trois et cinq propositions de réponses. L’application doit permettre de créer des quiz et d’y répondre. De plus, un administrateur doit pouvoir modérer tous les quiz. Vous devez inclure dans votre git un schéma de l’architecture de l’application qui évoluera selon vos avancées.
+
+Voici les tâches à effectuer avec la philosophie DevOps par ordre de priorité : 
+Création back des quiz avec persistance
+Création back pour répondre aux quiz
+Calcul automatique de la note du quiz
+Mise en production sur DockerHub (CD ici)
+Ajout des utilisateurs créateur de quiz (log/pass non chiffré)
+Ajout de l’administrateur (log/pass non chiffré)
+Ajout des joueurs aux quiz (log/pass non chiffré)
+Suivi des quiz par les créateurs et les utilisateurs
+Méthode sécurisé d’authentification
+Ajout d’un front pour créer un quiz
+Ajout d’un front pour jouer aux quiz
+Ajout d’un front administrateur
+Gestion des logs
+Gestion des logs de manière centralisée
+Ajout d’images possibles dans un quiz
+Ajout de réponses libres dans un quiz
+Ajout de choix multiples dans un quiz
+Gestion personnalisée du calcul du score pour un quiz donné
+Implémentation de sécurité dans la base de données
+Réplication et/ou sauvegarde de la base de données de manière automatique
+
+Remarque : vous ne devez pas tout coder pour valider le challenge, réfléchissez et vous comprendrez les critères de notation ;)
