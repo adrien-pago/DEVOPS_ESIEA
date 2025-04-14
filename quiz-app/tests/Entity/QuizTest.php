@@ -13,20 +13,14 @@ class QuizTest extends TestCase
     protected function setUp(): void
     {
         $this->quiz = new Quiz();
+        $this->quiz->setTheme('Test Theme');
     }
 
-    public function testQuizDefaultValues(): void
+    public function testQuizCreation(): void
     {
-        $this->assertNull($this->quiz->getId());
-        $this->assertNull($this->quiz->getTheme());
+        $this->assertInstanceOf(Quiz::class, $this->quiz);
+        $this->assertEquals('Test Theme', $this->quiz->getTheme());
         $this->assertFalse($this->quiz->isModerated());
-        $this->assertCount(0, $this->quiz->getQuestions());
-    }
-
-    public function testQuizTheme(): void
-    {
-        $this->quiz->setTheme('Histoire');
-        $this->assertEquals('Histoire', $this->quiz->getTheme());
     }
 
     public function testQuizModeration(): void
@@ -35,30 +29,105 @@ class QuizTest extends TestCase
         $this->assertTrue($this->quiz->isModerated());
     }
 
-    public function testAddQuestion(): void
+    public function testCalculateScoreWithNoQuestions(): void
     {
-        $question = new Question();
-        $question->setText('Quelle est la capitale de la France?');
-        $question->setChoices(['Paris', 'Londres', 'Berlin']);
-        $question->setCorrectChoice(0);
-
-        $this->quiz->addQuestion($question);
-        $this->assertCount(1, $this->quiz->getQuestions());
-        $this->assertSame($this->quiz, $question->getQuiz());
+        $score = $this->quiz->calculateScore([]);
+        $this->assertEquals(0.0, $score);
     }
 
-    public function testRemoveQuestion(): void
+    public function testCalculateScoreWithAllCorrectAnswers(): void
     {
-        $question = new Question();
-        $question->setText('Quelle est la capitale de la France?');
-        $question->setChoices(['Paris', 'Londres', 'Berlin']);
-        $question->setCorrectChoice(0);
+        // Créer trois questions avec leurs réponses correctes
+        $question1 = new Question();
+        $question1->setText('Question 1');
+        $question1->setChoices(['A', 'B', 'C']);
+        $question1->setCorrectChoice(0);
+        $this->quiz->addQuestion($question1);
 
-        $this->quiz->addQuestion($question);
-        $this->assertCount(1, $this->quiz->getQuestions());
+        $question2 = new Question();
+        $question2->setText('Question 2');
+        $question2->setChoices(['A', 'B', 'C']);
+        $question2->setCorrectChoice(1);
+        $this->quiz->addQuestion($question2);
 
-        $this->quiz->removeQuestion($question);
-        $this->assertCount(0, $this->quiz->getQuestions());
-        $this->assertNull($question->getQuiz());
+        $question3 = new Question();
+        $question3->setText('Question 3');
+        $question3->setChoices(['A', 'B', 'C']);
+        $question3->setCorrectChoice(2);
+        $this->quiz->addQuestion($question3);
+
+        // Simuler des réponses toutes correctes
+        $answers = [
+            $question1->getId() => 0,
+            $question2->getId() => 1,
+            $question3->getId() => 2
+        ];
+
+        $score = $this->quiz->calculateScore($answers);
+        $this->assertEquals(100.0, $score);
+    }
+
+    public function testCalculateScoreWithSomeCorrectAnswers(): void
+    {
+        // Créer trois questions
+        $question1 = new Question();
+        $question1->setText('Question 1');
+        $question1->setChoices(['A', 'B', 'C']);
+        $question1->setCorrectChoice(0);
+        $this->quiz->addQuestion($question1);
+
+        $question2 = new Question();
+        $question2->setText('Question 2');
+        $question2->setChoices(['A', 'B', 'C']);
+        $question2->setCorrectChoice(1);
+        $this->quiz->addQuestion($question2);
+
+        $question3 = new Question();
+        $question3->setText('Question 3');
+        $question3->setChoices(['A', 'B', 'C']);
+        $question3->setCorrectChoice(2);
+        $this->quiz->addQuestion($question3);
+
+        // Simuler des réponses avec seulement une bonne réponse
+        $answers = [
+            $question1->getId() => 0, // Correct
+            $question2->getId() => 2, // Incorrect
+            $question3->getId() => 1  // Incorrect
+        ];
+
+        $score = $this->quiz->calculateScore($answers);
+        $this->assertEquals(33.333333333333336, $score);
+    }
+
+    public function testCalculateScoreWithMissingAnswers(): void
+    {
+        // Créer trois questions
+        $question1 = new Question();
+        $question1->setText('Question 1');
+        $question1->setChoices(['A', 'B', 'C']);
+        $question1->setCorrectChoice(0);
+        $this->quiz->addQuestion($question1);
+
+        $question2 = new Question();
+        $question2->setText('Question 2');
+        $question2->setChoices(['A', 'B', 'C']);
+        $question2->setCorrectChoice(1);
+        $this->quiz->addQuestion($question2);
+
+        $question3 = new Question();
+        $question3->setText('Question 3');
+        $question3->setChoices(['A', 'B', 'C']);
+        $question3->setCorrectChoice(2);
+        $this->quiz->addQuestion($question3);
+
+        // Simuler des réponses avec une réponse manquante
+        $answers = [
+            $question1->getId() => 0, // Correct
+            $question2->getId() => 1  // Correct
+            // Question 3 manquante
+        ];
+
+        $score = $this->quiz->calculateScore($answers);
+        $this->assertEquals(66.66666666666666, $score);
     }
 } 

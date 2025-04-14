@@ -85,4 +85,34 @@ class Quiz
 
         return $this;
     }
+
+    /**
+     * Calcule le score d'un quiz en fonction des réponses données
+     * 
+     * @param array $answers Les réponses données, format: ['questionId' => 'choiceIndex']
+     * @return float Le score obtenu (entre 0 et 100)
+     */
+    public function calculateScore(array $answers): float
+    {
+        if (empty($this->questions) || empty($answers)) {
+            return 0.0;
+        }
+
+        $correctAnswers = 0;
+        $totalQuestions = count($this->questions);
+
+        foreach ($this->questions as $question) {
+            $questionId = $question->getId();
+            if (!isset($answers[$questionId])) {
+                continue;
+            }
+
+            $givenAnswer = $answers[$questionId];
+            if ($question->getCorrectChoice() === $givenAnswer) {
+                $correctAnswers++;
+            }
+        }
+
+        return ($correctAnswers / $totalQuestions) * 100;
+    }
 } 
