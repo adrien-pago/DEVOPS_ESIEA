@@ -112,20 +112,44 @@ class ScoreFunctionalTest extends WebTestCase
         
         if ($this->entityManager) {
             if ($this->quiz) {
-                foreach ($this->quiz->getQuestions() as $question) {
-                    foreach ($question->getAnswers() as $answer) {
-                        $this->entityManager->remove($answer);
+                try {
+                    // Rafraîchir le quiz et ses relations
+                    $this->entityManager->refresh($this->quiz);
+                    
+                    foreach ($this->quiz->getQuestions() as $question) {
+                        $this->entityManager->refresh($question);
+                        foreach ($question->getAnswers() as $answer) {
+                            $this->entityManager->refresh($answer);
+                            $this->entityManager->remove($answer);
+                        }
+                        $this->entityManager->remove($question);
+                        $this->entityManager->flush();
                     }
-                    $this->entityManager->remove($question);
+                    
+                    // Supprimer les résultats du quiz
+                    $results = $this->entityManager->getRepository(QuizResult::class)
+                        ->findBy(['quiz' => $this->quiz]);
+                    foreach ($results as $result) {
+                        $this->entityManager->remove($result);
+                    }
+                    
+                    $this->entityManager->remove($this->quiz);
+                    $this->entityManager->flush();
+                } catch (\Exception $e) {
+                    // Le quiz ou ses relations peuvent déjà avoir été supprimés
                 }
-                $this->entityManager->remove($this->quiz);
             }
             
             if ($this->user) {
-                $this->entityManager->remove($this->user);
+                try {
+                    $this->entityManager->refresh($this->user);
+                    $this->entityManager->remove($this->user);
+                    $this->entityManager->flush();
+                } catch (\Exception $e) {
+                    // L'utilisateur peut déjà avoir été supprimé
+                }
             }
             
-            $this->entityManager->flush();
             $this->entityManager->close();
             $this->entityManager = null;
         }

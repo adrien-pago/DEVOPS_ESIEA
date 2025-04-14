@@ -47,24 +47,39 @@ class QuizFunctionalTest extends WebTestCase
         parent::tearDown();
         
         if ($this->entityManager) {
-            // Supprimer d'abord les quiz et leurs dépendances
-            $quizzes = $this->quizRepository->findAll();
-            foreach ($quizzes as $quiz) {
-                foreach ($quiz->getQuestions() as $question) {
-                    foreach ($question->getAnswers() as $answer) {
-                        $this->entityManager->remove($answer);
-                    }
-                    $this->entityManager->remove($question);
-                }
-                $this->entityManager->remove($quiz);
-            }
-            
-            // Ensuite supprimer l'utilisateur
+            // Supprimer uniquement les quiz créés par l'utilisateur de test
             if ($this->user) {
-                $this->entityManager->remove($this->user);
+                try {
+                    // Rafraîchir l'utilisateur
+                    $this->entityManager->refresh($this->user);
+                    
+                    // Récupérer les quiz de l'utilisateur
+                    $userQuizzes = $this->quizRepository->findBy(['author' => $this->user]);
+                    
+                    foreach ($userQuizzes as $quiz) {
+                        // Rafraîchir l'entité quiz
+                        $this->entityManager->refresh($quiz);
+                        
+                        foreach ($quiz->getQuestions() as $question) {
+                            $this->entityManager->refresh($question);
+                            foreach ($question->getAnswers() as $answer) {
+                                $this->entityManager->refresh($answer);
+                                $this->entityManager->remove($answer);
+                            }
+                            $this->entityManager->remove($question);
+                        }
+                        $this->entityManager->remove($quiz);
+                        $this->entityManager->flush();
+                    }
+                    
+                    // Supprimer l'utilisateur
+                    $this->entityManager->remove($this->user);
+                    $this->entityManager->flush();
+                } catch (\Exception $e) {
+                    // Les entités peuvent déjà avoir été supprimées
+                }
             }
             
-            $this->entityManager->flush();
             $this->entityManager->close();
             $this->entityManager = null;
         }
@@ -74,6 +89,14 @@ class QuizFunctionalTest extends WebTestCase
 
     public function testCreateQuiz(): void
     {
+        // S'assurer que l'utilisateur est persisté et attaché à l'EntityManager
+        $this->entityManager->refresh($this->user);
+        
+        // Vérifier que l'utilisateur existe dans la base de données
+        $userRepository = $this->entityManager->getRepository(User::class);
+        $user = $userRepository->find($this->user->getId());
+        $this->assertNotNull($user, 'L\'utilisateur doit exister dans la base de données');
+        
         $quizData = [
             'title' => 'Test Quiz',
             'theme' => 'Test Theme',
@@ -135,15 +158,20 @@ class QuizFunctionalTest extends WebTestCase
         // S'assurer que l'utilisateur est persisté
         $this->entityManager->refresh($this->user);
         
+        // Vérifier que l'utilisateur existe dans la base de données
+        $userRepository = $this->entityManager->getRepository(User::class);
+        $user = $userRepository->find($this->user->getId());
+        $this->assertNotNull($user, 'L\'utilisateur doit exister dans la base de données');
+        
         // Create some quizzes for testing
         for ($i = 1; $i <= 3; $i++) {
             $quiz = new Quiz();
             $quiz->setTitle('Test Quiz ' . $i);
             $quiz->setTheme('Test Theme');
-            $quiz->setAuthor($this->user);
+            $quiz->setAuthor($user); // Utiliser l'utilisateur récupéré de la base de données
             $this->entityManager->persist($quiz);
+            $this->entityManager->flush(); // Flush après chaque quiz pour s'assurer qu'il est bien persisté
         }
-        $this->entityManager->flush();
 
         $this->client->request('GET', '/api/quiz');
 
