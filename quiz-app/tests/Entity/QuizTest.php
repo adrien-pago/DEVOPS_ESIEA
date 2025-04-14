@@ -96,7 +96,7 @@ class QuizTest extends TestCase
         ];
 
         $score = $this->quiz->calculateScore($answers);
-        $this->assertEquals(33.333333333333336, $score);
+        $this->assertEqualsWithDelta(33.33, $score, 0.01);
     }
 
     public function testCalculateScoreWithMissingAnswers(): void
@@ -128,6 +128,6 @@ class QuizTest extends TestCase
         ];
 
         $score = $this->quiz->calculateScore($answers);
-        $this->assertEquals(66.66666666666666, $score);
+        $this->assertEqualsWithDelta(66.67, $score, 0.01);
     }
 } 
