@@ -1,9 +1,17 @@
 @echo off
-REM Ensure we're in the project root
-cd /d "%~dp0.."
+setlocal
 
-REM Create test database if needed
-php scripts/create-test-database.php
+REM Définir l'environnement de test
+set APP_ENV=test
 
-REM Run the tests
-php bin/phpunit 
+echo Creation du schema de la base de donnees...
+php scripts/create-schema.php
+
+echo Execution des tests...
+vendor\bin\phpunit.bat
+
+REM Clean up
+echo Cleaning up...
+if exist var\test.db del var\test.db
+
+endlocal 

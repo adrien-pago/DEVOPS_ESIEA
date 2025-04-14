@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Ensure we're in the project root
-cd "$(dirname "$0")/.." || exit 1
+# Définir l'environnement de test
+export APP_ENV=test
 
-# Create test database if needed
-php scripts/create-test-database.php
+echo "Création du schéma de la base de données..."
+php scripts/create-schema.php
 
-# Run the tests
-php bin/phpunit 
+echo "Exécution des tests..."
+./vendor/bin/phpunit 

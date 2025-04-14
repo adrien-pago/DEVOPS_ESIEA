@@ -72,6 +72,8 @@ jobs:
         done
 
     - name: Create Database
+      env:
+        DATABASE_URL: "mysql://root:root@127.0.0.1:3306/quiz_app_test?serverVersion=8.0"
       run: |
         # For MySQL, use the doctrine:database:create command
         php bin/console doctrine:database:create --env=test --if-not-exists || true
@@ -79,10 +81,16 @@ jobs:
         php scripts/create-test-database.php || true
 
     - name: Create Database Schema
+      env:
+        DATABASE_URL: "mysql://root:root@127.0.0.1:3306/quiz_app_test?serverVersion=8.0"
       run: |
-        php bin/console doctrine:schema:create --env=test
+        # Use our custom script to create the schema
+        php scripts/create-schema.php || true
+        # Fallback to the doctrine:schema:create command
+        php bin/console doctrine:schema:create --env=test || true
 
     - name: Execute tests
       env:
         APP_ENV: test
+        DATABASE_URL: "mysql://root:root@127.0.0.1:3306/quiz_app_test?serverVersion=8.0"
       run: vendor/bin/phpunit
