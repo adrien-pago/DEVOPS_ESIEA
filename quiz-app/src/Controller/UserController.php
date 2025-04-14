@@ -14,6 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Security;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 #[Route('/api')]
 class UserController extends AbstractController
@@ -23,19 +24,22 @@ class UserController extends AbstractController
     private $security;
     private $jwtManager;
     private $params;
+    private $tokenStorage;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         Security $security,
         JWTTokenManagerInterface $jwtManager,
-        ParameterBagInterface $params
+        ParameterBagInterface $params,
+        TokenStorageInterface $tokenStorage
     ) {
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
         $this->security = $security;
         $this->jwtManager = $jwtManager;
         $this->params = $params;
+        $this->tokenStorage = $tokenStorage;
     }
 
     private function generateToken(User $user): string
@@ -95,6 +99,9 @@ class UserController extends AbstractController
     public function profile(): JsonResponse
     {
         $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
         return $this->json($user);
     }
 
@@ -102,6 +109,10 @@ class UserController extends AbstractController
     public function updateProfile(Request $request): JsonResponse
     {
         $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+        
         $data = json_decode($request->getContent(), true);
         
         if (isset($data['username'])) {
@@ -120,6 +131,10 @@ class UserController extends AbstractController
     public function quizHistory(): JsonResponse
     {
         $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+        
         $results = $this->entityManager->getRepository(QuizResult::class)->findBy(['user' => $user]);
         
         return $this->json($results);

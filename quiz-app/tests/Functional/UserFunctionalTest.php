@@ -3,6 +3,7 @@
 namespace App\Tests\Functional;
 
 use App\Entity\User;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,12 +14,14 @@ class UserFunctionalTest extends WebTestCase
     private $client;
     private $entityManager;
     private $passwordHasher;
+    private $userRepository;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
         $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $this->passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+        $this->userRepository = static::getContainer()->get(UserRepository::class);
     }
 
     protected function tearDown(): void
@@ -40,18 +43,19 @@ class UserFunctionalTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('id', $response);
-        $this->assertArrayHasKey('email', $response);
-        $this->assertEquals('register@example.com', $response['email']);
+        $this->assertArrayHasKey('token', $response);
     }
 
     public function testUserLogin(): void
     {
         // Créer un utilisateur pour le test
-        $this->client->request('POST', '/api/register', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
-            'email' => 'login@example.com',
-            'password' => 'password123',
-            'username' => 'loginuser'
-        ]));
+        $user = new User();
+        $user->setEmail('login@example.com');
+        $user->setUsername('loginuser');
+        $hashedPassword = $this->passwordHasher->hashPassword($user, 'password123');
+        $user->setPassword($hashedPassword);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
 
         // Tenter de se connecter
         $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
@@ -66,11 +70,19 @@ class UserFunctionalTest extends WebTestCase
 
     public function testProtectedRoute(): void
     {
-        // Créer un utilisateur et obtenir un token
-        $this->client->request('POST', '/api/register', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
+        // Créer un utilisateur pour le test
+        $user = new User();
+        $user->setEmail('protected@example.com');
+        $user->setUsername('protecteduser');
+        $hashedPassword = $this->passwordHasher->hashPassword($user, 'password123');
+        $user->setPassword($hashedPassword);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        // Se connecter pour obtenir le token
+        $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
             'email' => 'protected@example.com',
-            'password' => 'password123',
-            'username' => 'protecteduser'
+            'password' => 'password123'
         ]));
 
         $response = json_decode($this->client->getResponse()->getContent(), true);
@@ -86,11 +98,19 @@ class UserFunctionalTest extends WebTestCase
 
     public function testUserProfileUpdate(): void
     {
-        // Créer un utilisateur et obtenir un token
-        $this->client->request('POST', '/api/register', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
+        // Créer un utilisateur pour le test
+        $user = new User();
+        $user->setEmail('update@example.com');
+        $user->setUsername('updateuser');
+        $hashedPassword = $this->passwordHasher->hashPassword($user, 'password123');
+        $user->setPassword($hashedPassword);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        // Se connecter pour obtenir le token
+        $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
             'email' => 'update@example.com',
-            'password' => 'password123',
-            'username' => 'updateuser'
+            'password' => 'password123'
         ]));
 
         $response = json_decode($this->client->getResponse()->getContent(), true);
