@@ -32,6 +32,7 @@ class QuizRepositoryTest extends KernelTestCase
         // Create a user first
         $user = new User();
         $user->setUsername('testuser');
+        $user->setEmail('testuser@example.com');
         $user->setPassword('password123');
         $this->entityManager->persist($user);
         $this->entityManager->flush();
@@ -54,6 +55,7 @@ class QuizRepositoryTest extends KernelTestCase
         // Create a user first
         $user = new User();
         $user->setUsername('testuser');
+        $user->setEmail('testuser@example.com');
         $user->setPassword('password123');
         $this->entityManager->persist($user);
         $this->entityManager->flush();
