@@ -49,34 +49,44 @@ class ScoreFunctionalTest extends WebTestCase
         $question1 = new Question();
         $question1->setText('Question 1');
         $question1->setQuiz($this->quiz);
+        $question1->setChoices(['Answer 1', 'Answer 2']);
+        $question1->setCorrectChoice(0);
+        $this->quiz->addQuestion($question1);
 
         $correctAnswer1 = new Answer();
         $correctAnswer1->setText('Correct Answer 1');
         $correctAnswer1->setIsCorrect(true);
         $correctAnswer1->setSelectedChoice(0);
         $correctAnswer1->setQuestion($question1);
+        $question1->addAnswer($correctAnswer1);
 
         $wrongAnswer1 = new Answer();
         $wrongAnswer1->setText('Wrong Answer 1');
         $wrongAnswer1->setIsCorrect(false);
         $wrongAnswer1->setSelectedChoice(1);
         $wrongAnswer1->setQuestion($question1);
+        $question1->addAnswer($wrongAnswer1);
 
         $question2 = new Question();
         $question2->setText('Question 2');
         $question2->setQuiz($this->quiz);
+        $question2->setChoices(['Answer 3', 'Answer 4']);
+        $question2->setCorrectChoice(0);
+        $this->quiz->addQuestion($question2);
 
         $correctAnswer2 = new Answer();
         $correctAnswer2->setText('Correct Answer 2');
         $correctAnswer2->setIsCorrect(true);
         $correctAnswer2->setSelectedChoice(0);
         $correctAnswer2->setQuestion($question2);
+        $question2->addAnswer($correctAnswer2);
 
         $wrongAnswer2 = new Answer();
         $wrongAnswer2->setText('Wrong Answer 2');
         $wrongAnswer2->setIsCorrect(false);
         $wrongAnswer2->setSelectedChoice(1);
         $wrongAnswer2->setQuestion($question2);
+        $question2->addAnswer($wrongAnswer2);
 
         $this->entityManager->persist($this->quiz);
         $this->entityManager->persist($question1);
@@ -86,6 +96,11 @@ class ScoreFunctionalTest extends WebTestCase
         $this->entityManager->persist($correctAnswer2);
         $this->entityManager->persist($wrongAnswer2);
         $this->entityManager->flush();
+
+        // Rafraîchir les entités pour s'assurer que les relations sont chargées
+        $this->entityManager->refresh($this->quiz);
+        $this->entityManager->refresh($question1);
+        $this->entityManager->refresh($question2);
     }
 
     protected function tearDown(): void
@@ -105,8 +120,12 @@ class ScoreFunctionalTest extends WebTestCase
 
     public function testSubmitQuizWithPerfectScore(): void
     {
-        // Submit answers (all correct)
+        // S'assurer que le quiz a des questions
+        $this->entityManager->refresh($this->quiz);
         $questions = $this->quiz->getQuestions();
+        $this->assertNotEmpty($questions, 'Le quiz doit avoir des questions');
+
+        // Submit answers (all correct)
         $answers = [];
         foreach ($questions as $question) {
             foreach ($question->getAnswers() as $answer) {
@@ -119,6 +138,8 @@ class ScoreFunctionalTest extends WebTestCase
                 }
             }
         }
+
+        $this->assertNotEmpty($answers, 'Il doit y avoir des réponses correctes');
 
         $this->client->request('POST', '/api/quiz/' . $this->quiz->getId() . '/submit', [], [], [
             'CONTENT_TYPE' => 'application/json',
@@ -142,12 +163,19 @@ class ScoreFunctionalTest extends WebTestCase
 
     public function testSubmitQuizWithPartialScore(): void
     {
-        // Submit answers (one correct, one incorrect)
+        // S'assurer que le quiz a des questions
+        $this->entityManager->refresh($this->quiz);
         $questions = $this->quiz->getQuestions();
+        $this->assertNotEmpty($questions, 'Le quiz doit avoir des questions');
+        $this->assertCount(2, $questions, 'Le quiz doit avoir exactement 2 questions');
+
+        // Submit answers (one correct, one incorrect)
         $answers = [];
         
         // First question correct
-        foreach ($questions[0]->getAnswers() as $answer) {
+        $firstQuestionAnswers = $questions[0]->getAnswers();
+        $this->assertNotEmpty($firstQuestionAnswers, 'La première question doit avoir des réponses');
+        foreach ($firstQuestionAnswers as $answer) {
             if ($answer->isCorrect()) {
                 $answers[] = [
                     'questionId' => $questions[0]->getId(),
@@ -158,7 +186,9 @@ class ScoreFunctionalTest extends WebTestCase
         }
 
         // Second question incorrect
-        foreach ($questions[1]->getAnswers() as $answer) {
+        $secondQuestionAnswers = $questions[1]->getAnswers();
+        $this->assertNotEmpty($secondQuestionAnswers, 'La deuxième question doit avoir des réponses');
+        foreach ($secondQuestionAnswers as $answer) {
             if (!$answer->isCorrect()) {
                 $answers[] = [
                     'questionId' => $questions[1]->getId(),
@@ -167,6 +197,8 @@ class ScoreFunctionalTest extends WebTestCase
                 break;
             }
         }
+
+        $this->assertCount(2, $answers, 'Il doit y avoir exactement 2 réponses');
 
         $this->client->request('POST', '/api/quiz/' . $this->quiz->getId() . '/submit', [], [], [
             'CONTENT_TYPE' => 'application/json',
@@ -195,13 +227,13 @@ class ScoreFunctionalTest extends WebTestCase
         $result1->setUser($this->user);
         $result1->setQuiz($this->quiz);
         $result1->setScore(100);
-        $result1->setCompletedAt(new \DateTime());
+        $result1->setCompletedAt(new \DateTimeImmutable());
 
         $result2 = new QuizResult();
         $result2->setUser($this->user);
         $result2->setQuiz($this->quiz);
         $result2->setScore(50);
-        $result2->setCompletedAt(new \DateTime());
+        $result2->setCompletedAt(new \DateTimeImmutable());
 
         $this->entityManager->persist($result1);
         $this->entityManager->persist($result2);

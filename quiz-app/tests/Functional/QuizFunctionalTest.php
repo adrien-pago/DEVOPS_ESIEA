@@ -110,6 +110,9 @@ class QuizFunctionalTest extends WebTestCase
 
     public function testListQuizzes(): void
     {
+        // S'assurer que l'utilisateur est persisté
+        $this->entityManager->refresh($this->user);
+        
         // Create some quizzes for testing
         for ($i = 1; $i <= 3; $i++) {
             $quiz = new Quiz();

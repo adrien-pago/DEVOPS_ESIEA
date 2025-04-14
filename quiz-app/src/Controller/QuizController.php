@@ -67,12 +67,13 @@ class QuizController extends AbstractController
             $qb = $this->entityManager->createQueryBuilder();
             $qb->select('q')
                ->from(Quiz::class, 'q')
-               ->where('q.author IS NOT NULL');
+               ->leftJoin('q.author', 'a')
+               ->where('a.id IS NOT NULL');
             
             $quizzes = $qb->getQuery()->getResult();
             return $this->json($quizzes, Response::HTTP_OK, [], ['groups' => ['quiz:read']]);
-        } catch (\Doctrine\ORM\EntityNotFoundException $e) {
-            return $this->json(['message' => 'Some quizzes have authors that no longer exist'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        } catch (\Exception $e) {
+            return $this->json(['message' => 'Error retrieving quizzes: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

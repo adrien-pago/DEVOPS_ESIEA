@@ -31,7 +31,7 @@ class Quiz
     private ?bool $moderated = false;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: true)]
+    #[ORM\JoinColumn(nullable: false)]
     #[Groups(['quiz:read'])]
     private ?User $author = null;
 
