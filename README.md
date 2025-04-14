@@ -63,10 +63,11 @@ Application de quiz en ligne développée avec Symfony, suivant les principes De
 Pour lancer les tests : `php bin/phpunit`
 
 ## Fonctionnalités implémentées
-- [ ] Back des quiz avec persistance
-- [ ] Back pour répondre aux quiz
-- [ ] Calcul automatique de la note du quiz
-- [ ] Déploiement sur DockerHub
+- [x] Back des quiz avec persistance
+- [x] Back pour répondre aux quiz
+- [x] Calcul automatique de la note du quiz
+- [x] Déploiement sur DockerHub
+- [x] Ajout des utilisateurs créateur de quiz
 
 ## Workflow Git
 - Branche `main` : code en production
