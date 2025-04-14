@@ -23,7 +23,18 @@ security:
                 username_path: email
                 password_path: password
             jwt: false
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800
+                path: /
+            logout:
+                path: /api/logout
+                target: /api/login
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
+        - { path: ^/api/logout, roles: ROLE_USER }
+        - { path: ^/api/quiz, roles: ROLE_USER }
+        - { path: ^/api/user, roles: ROLE_USER }
+        - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api, roles: ROLE_USER } 

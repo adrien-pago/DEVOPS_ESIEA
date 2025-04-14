@@ -1,5 +1,31 @@
 # Quiz Application - DevOps Project
 
+# Question DEVOPS
+
+## Comment définiriez-vous le DevOps ?
+Le DevOps est une démarche collaborative entre les équipes de développement et d’opérations. 
+Il vise à automatiser les processus de déploiement.
+
+## Qu’impose le DevOps ?
+Le DevOps impose une très bonne organisation des tâches et une très bonne méthodologie.
+Il requiert également une collaboration continue entre les différentes équipes impliquées dans le cycle de vie d’une application.
+
+## Quels sont les inconvénients ou les faiblesses du DevOps ?
+La mise en place initiale qui peut être complexe, la nécessité d’instaurer une forte culture d’entreprise et l’investissement en formation pour maîtriser les outils d’automatisation indispensables à sa mise en œuvre.
+
+## Quel est votre avis sur le DevOps ?
+Le DevOps est indispensable pour faire évoluer un projet mais plus ou moins lourd à mettre en place selon les projets.
+
+## Quels sont les tests primordiaux pour toute application ?
+Pour assurer la qualité d'une application, il est essentiel de mettre en place :
+- Des **tests unitaires** pour vérifier le bon fonctionnement des composants individuels ;
+- Des **tests d’intégration** pour s’assurer de la cohérence entre les différents modules ;
+- Des **tests fonctionnels** pour valider que l'application répond aux besoins métier et se comporte comme prévu lors des scénarios d'utilisation.
+- Des **tests de sécurité** pour identifier et corriger les vulnérabilités (comme les injections SQL, les failles XSS, etc.).
+
+
+
+
 ## Description
 Application de quiz en ligne développée avec Symfony, suivant les principes DevOps.
 
