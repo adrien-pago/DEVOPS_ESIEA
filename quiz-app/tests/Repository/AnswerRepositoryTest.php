@@ -21,7 +21,8 @@ class AnswerRepositoryTest extends KernelTestCase
         $this->entityManager = $kernel->getContainer()->get('doctrine')->getManager();
         $this->answerRepository = $this->entityManager->getRepository(Answer::class);
         
-        // Clean up the database
+        // Clean up the database in the correct order
+        $this->entityManager->createQuery('DELETE FROM App\Entity\QuizResult')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
@@ -129,7 +130,8 @@ class AnswerRepositoryTest extends KernelTestCase
 
     protected function tearDown(): void
     {
-        // Clean up the database
+        // Clean up the database in the correct order
+        $this->entityManager->createQuery('DELETE FROM App\Entity\QuizResult')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();

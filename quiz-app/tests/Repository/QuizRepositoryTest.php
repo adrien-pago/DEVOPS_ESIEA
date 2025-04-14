@@ -17,13 +17,13 @@ class QuizRepositoryTest extends KernelTestCase
     protected function setUp(): void
     {
         $kernel = self::bootKernel();
-        $this->entityManager = $kernel->getContainer()
-            ->get('doctrine')
-            ->getManager();
-        
+        $this->entityManager = $kernel->getContainer()->get('doctrine')->getManager();
         $this->quizRepository = $this->entityManager->getRepository(Quiz::class);
         
-        // Ensure we're starting with a clean database
+        // Clean up the database in the correct order
+        $this->entityManager->createQuery('DELETE FROM App\Entity\QuizResult')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
     }
@@ -98,7 +98,10 @@ class QuizRepositoryTest extends KernelTestCase
 
     protected function tearDown(): void
     {
-        // Clean up the database
+        // Clean up the database in the correct order
+        $this->entityManager->createQuery('DELETE FROM App\Entity\QuizResult')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
         

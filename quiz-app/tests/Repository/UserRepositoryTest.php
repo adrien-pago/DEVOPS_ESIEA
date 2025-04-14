@@ -14,33 +14,32 @@ class UserRepositoryTest extends KernelTestCase
 
     protected function setUp(): void
     {
-        parent::setUp();
-        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $this->userRepository = static::getContainer()->get(UserRepository::class);
+        $kernel = self::bootKernel();
+        $this->entityManager = $kernel->getContainer()->get('doctrine')->getManager();
+        $this->userRepository = $this->entityManager->getRepository(User::class);
         
-        // Nettoyer la base de données avant chaque test
+        // Clean up the database in the correct order
+        $this->entityManager->createQuery('DELETE FROM App\Entity\QuizResult')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
-        $this->entityManager->flush();
     }
 
     protected function tearDown(): void
     {
+        // Clean up the database in the correct order
+        $this->entityManager->createQuery('DELETE FROM App\Entity\QuizResult')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
+        
         parent::tearDown();
         
-        if ($this->entityManager) {
-            // Nettoyer la base de données après chaque test
-            $this->entityManager->createQuery('DELETE FROM App\Entity\Answer')->execute();
-            $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
-            $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
-            $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
-            $this->entityManager->flush();
-            
-            $this->entityManager->close();
-            $this->entityManager = null;
-        }
+        // Close the entity manager
+        $this->entityManager->close();
+        $this->entityManager = null;
     }
 
     public function testFindByUsername(): void
