@@ -15,9 +15,4 @@ security:
             json_login:
                 check_path: /api/login
                 username_path: email
-                password_path: password
-
-    access_control:
-        - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        - { path: ^/api/register, roles: PUBLIC_ACCESS }
-        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY } 
+                password_path: password 
