@@ -2,7 +2,7 @@ doctrine:
     dbal:
         driver: pdo_sqlite
         path: '%kernel.project_dir%/var/test.db'
-        url: null
+        url: '%env(default::null:DATABASE_URL)%'
         memory: true
     orm:
         auto_generate_proxy_classes: true

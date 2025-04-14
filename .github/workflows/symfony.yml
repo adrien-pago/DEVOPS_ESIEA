@@ -43,6 +43,13 @@ jobs:
     - name: Copy .env
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
+    - name: Configure test environment
+      run: |
+        # Uncomment the MySQL DATABASE_URL in .env.test
+        sed -i 's/# DATABASE_URL="mysql:\/\/root:root@127.0.0.1:3306\/quiz_app_test?serverVersion=8.0"/DATABASE_URL="mysql:\/\/root:root@127.0.0.1:3306\/quiz_app_test?serverVersion=8.0"/' .env.test
+        # Comment out the SQLite DATABASE_URL
+        sed -i 's/DATABASE_URL="sqlite:\/\/\/%kernel.project_dir%\/var\/test.db"/# DATABASE_URL="sqlite:\/\/\/%kernel.project_dir%\/var\/test.db"/' .env.test
+
     - name: Cache Composer packages
       id: composer-cache
       uses: actions/cache@v3
@@ -66,10 +73,16 @@ jobs:
 
     - name: Create Database
       run: |
-        php bin/console doctrine:database:create --env=test --if-not-exists
+        # For MySQL, use the doctrine:database:create command
+        php bin/console doctrine:database:create --env=test --if-not-exists || true
+        # For SQLite, use our custom script
+        php scripts/create-test-database.php || true
+
+    - name: Create Database Schema
+      run: |
         php bin/console doctrine:schema:create --env=test
 
     - name: Execute tests
       env:
-        DATABASE_URL: "mysql://root:root@127.0.0.1:3306/quiz_app_test?serverVersion=8.0"
+        APP_ENV: test
       run: vendor/bin/phpunit
