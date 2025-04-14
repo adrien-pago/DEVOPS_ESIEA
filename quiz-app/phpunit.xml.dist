@@ -22,7 +22,8 @@
         <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled" />
         <env name="PANTHER_APP_ENV" value="panther" />
         <env name="PANTHER_ERROR_SCREENSHOT_DIR" value="./var/error-screenshots" />
-        <env name="DATABASE_URL" value="mysql://root:root@127.0.0.1:3306/quiz_app_test?serverVersion=8.0" />
+        <env name="DATABASE_URL" value="sqlite:///%kernel.project_dir%/var/test.db" />
+        <env name="SYMFONY_SECURITY_CONFIG" value="security_test.yaml" />
     </php>
 
     <testsuites>

@@ -9,13 +9,30 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class UserRepositoryTest extends KernelTestCase
 {
-    private EntityManagerInterface $entityManager;
+    private ?EntityManagerInterface $entityManager = null;
     private UserRepository $userRepository;
 
     protected function setUp(): void
     {
-        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $this->userRepository = static::getContainer()->get(UserRepository::class);
+        $kernel = self::bootKernel();
+        $this->entityManager = $kernel->getContainer()
+            ->get('doctrine')
+            ->getManager();
+        $this->userRepository = $this->entityManager->getRepository(User::class);
+
+        // Clean up the database
+        $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
+    }
+
+    protected function tearDown(): void
+    {
+        // Clean up the database
+        if ($this->entityManager) {
+            $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
+            $this->entityManager->close();
+            $this->entityManager = null;
+        }
+        parent::tearDown();
     }
 
     public function testFindByUsername(): void

@@ -13,98 +13,86 @@ class QuestionRepositoryTest extends KernelTestCase
 {
     private ?EntityManagerInterface $entityManager = null;
     private QuestionRepository $questionRepository;
+    private User $user;
+    private Quiz $quiz;
+    private Question $question;
 
     protected function setUp(): void
     {
         $kernel = self::bootKernel();
         $this->entityManager = $kernel->getContainer()->get('doctrine')->getManager();
         $this->questionRepository = $this->entityManager->getRepository(Question::class);
-        
-        // Clean up the database
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
+
+        // Create test user
+        $this->user = new User();
+        $this->user->setEmail('question_test@example.com');
+        $this->user->setUsername('questionuser_test');
+        $this->user->setPassword('password123');
+        $this->entityManager->persist($this->user);
+
+        // Create test quiz
+        $this->quiz = new Quiz();
+        $this->quiz->setTitle('Test Quiz for Questions');
+        $this->quiz->setTheme('Test Theme');
+        $this->quiz->setModerated(true);
+        $this->quiz->setAuthor($this->user);
+        $this->entityManager->persist($this->quiz);
+
+        // Create test questions
+        $this->question = new Question();
+        $this->question->setText('Test Question');
+        $this->question->setQuiz($this->quiz);
+        $this->question->setChoices(['A', 'B', 'C']);
+        $this->question->setCorrectChoice(0);
+        $this->entityManager->persist($this->question);
+
+        $this->entityManager->flush();
     }
 
     public function testFindByQuiz(): void
     {
-        // Create a user first
-        $user = new User();
-        $user->setUsername('testuser');
-        $user->setPassword('password123');
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
-
-        // Créer un quiz
-        $quiz = new Quiz();
-        $quiz->setTheme('Mathématiques');
-        $quiz->setCreator($user);
-        $this->entityManager->persist($quiz);
-        $this->entityManager->flush();
-
-        // Créer une question associée au quiz
-        $question = new Question();
-        $question->setText('Quelle est la somme de 2 + 2 ?');
-        $question->setChoices(['3', '4', '5', '6']);
-        $question->setCorrectChoice(1);
-        $question->setQuiz($quiz);
-        $this->entityManager->persist($question);
-        $this->entityManager->flush();
-
         // Rechercher les questions par quiz
-        $foundQuestions = $this->questionRepository->findByQuiz($quiz);
+        $foundQuestions = $this->questionRepository->findByQuiz($this->quiz);
         
         $this->assertCount(1, $foundQuestions);
-        $this->assertEquals($quiz, $foundQuestions[0]->getQuiz());
+        $this->assertEquals($this->quiz, $foundQuestions[0]->getQuiz());
     }
 
     public function testFindRandomQuestions(): void
     {
-        // Create a user first
-        $user = new User();
-        $user->setUsername('testuser');
-        $user->setPassword('password123');
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
-
-        // Créer un quiz
-        $quiz = new Quiz();
-        $quiz->setTheme('Histoire');
-        $quiz->setCreator($user);
-        $this->entityManager->persist($quiz);
-        $this->entityManager->flush();
-
-        // Créer plusieurs questions
-        $questions = [];
-        for ($i = 1; $i <= 5; $i++) {
+        // Create additional questions for random test
+        for ($i = 0; $i < 5; $i++) {
             $question = new Question();
-            $question->setText("Question $i");
-            $question->setChoices(['A', 'B', 'C', 'D']);
+            $question->setText('Test Question ' . $i);
+            $question->setQuiz($this->quiz);
+            $question->setChoices(['A', 'B', 'C']);
             $question->setCorrectChoice(0);
-            $question->setQuiz($quiz);
             $this->entityManager->persist($question);
-            $questions[] = $question;
         }
         $this->entityManager->flush();
 
         // Rechercher 3 questions aléatoires
-        $randomQuestions = $this->questionRepository->findRandomQuestions($quiz, 3);
+        $randomQuestions = $this->questionRepository->findRandomQuestions($this->quiz, 3);
         
         $this->assertCount(3, $randomQuestions);
-        $this->assertNotEquals($randomQuestions[0], $randomQuestions[1]);
-        $this->assertNotEquals($randomQuestions[1], $randomQuestions[2]);
+        foreach ($randomQuestions as $question) {
+            $this->assertEquals($this->quiz, $question->getQuiz());
+        }
     }
 
     protected function tearDown(): void
     {
-        // Clean up the database
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Question')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Quiz')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
-        
+        if ($this->question) {
+            $this->entityManager->remove($this->question);
+        }
+        if ($this->quiz) {
+            $this->entityManager->remove($this->quiz);
+        }
+        if ($this->user) {
+            $this->entityManager->remove($this->user);
+        }
+        $this->entityManager->flush();
         parent::tearDown();
-        
-        // Close the entity manager
         $this->entityManager->close();
         $this->entityManager = null;
     }

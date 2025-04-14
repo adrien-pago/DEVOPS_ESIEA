@@ -18,20 +18,9 @@ security:
         main:
             lazy: true
             provider: app_user_provider
-            jwt: ~
-            json_login:
-                check_path: /api/login
-                username_path: email
-                password_path: password
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
-            remember_me:
-                secret: 'ThisIsNotASecretChangeIt'
-                lifetime: 604800
-                path: /
+            http_basic: true
             logout:
                 path: /api/logout
-                target: /api/login
 
     # activate different ways to authenticate
     # https://symfony.com/doc/current/security.html#the-firewall

@@ -42,7 +42,7 @@ class QuizRepositoryTest extends KernelTestCase
         $quiz = new Quiz();
         $quiz->setTitle('Test Quiz Title');
         $quiz->setTheme('Géographie');
-        $quiz->setCreator($user);
+        $quiz->setAuthor($user);
         $quiz->setModerated(true);
 
         // Create a question with all required fields
@@ -76,7 +76,7 @@ class QuizRepositoryTest extends KernelTestCase
         $quiz = new Quiz();
         $quiz->setTitle('Test Quiz Title');
         $quiz->setTheme('Histoire');
-        $quiz->setCreator($user);
+        $quiz->setAuthor($user);
         $quiz->setModerated(true);
 
         // Create a question with all required fields

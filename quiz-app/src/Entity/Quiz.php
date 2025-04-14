@@ -6,6 +6,8 @@ use App\Repository\QuizRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: QuizRepository::class)]
 class Quiz
@@ -13,22 +15,28 @@ class Quiz
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['quiz:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['quiz:read'])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['quiz:read'])]
     private ?string $theme = null;
 
     #[ORM\Column]
+    #[Groups(['quiz:read'])]
     private ?bool $moderated = false;
 
-    #[ORM\ManyToOne(inversedBy: 'quizzes')]
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true)]
-    private ?User $creator = null;
+    #[Groups(['quiz:read'])]
+    private ?User $author = null;
 
-    #[ORM\OneToMany(mappedBy: 'quiz', targetEntity: Question::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'quiz', targetEntity: Question::class, orphanRemoval: true, cascade: ['persist'])]
+    #[Groups(['quiz:read'])]
     private Collection $questions;
 
     public function __construct()
@@ -74,14 +82,14 @@ class Quiz
         return $this;
     }
 
-    public function getCreator(): ?User
+    public function getAuthor(): ?User
     {
-        return $this->creator;
+        return $this->author;
     }
 
-    public function setCreator(?User $creator): static
+    public function setAuthor(?User $author): static
     {
-        $this->creator = $creator;
+        $this->author = $author;
         return $this;
     }
 

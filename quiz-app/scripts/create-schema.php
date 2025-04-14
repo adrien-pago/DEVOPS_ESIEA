@@ -5,9 +5,13 @@ use Symfony\Component\Dotenv\Dotenv;
 
 require dirname(__DIR__).'/vendor/autoload.php';
 
-(new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+// Charger les variables d'environnement de test
+$dotenv = new Dotenv();
+$dotenv->loadEnv(dirname(__DIR__).'/.env.test');
 
+// Définir l'environnement de test
 $_SERVER['APP_ENV'] = 'test';
+$_ENV['APP_ENV'] = 'test';
 
 $kernel = new Kernel('test', true);
 $kernel->boot();

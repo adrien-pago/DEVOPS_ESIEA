@@ -20,31 +20,30 @@ class QuizFunctionalTest extends WebTestCase
 
     protected function setUp(): void
     {
-        $this->client = static::createClient();
+        $this->client = static::createClient([], [
+            'PHP_AUTH_USER' => 'quiz_test@example.com',
+            'PHP_AUTH_PW' => 'password123'
+        ]);
         $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $this->passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
         $this->quizRepository = static::getContainer()->get(QuizRepository::class);
 
-        // Créer un utilisateur pour les tests
+        // Create test user
         $this->user = new User();
-        $this->user->setEmail('quiz@example.com');
-        $this->user->setUsername('quizuser');
+        $this->user->setEmail('quiz_test@example.com');
+        $this->user->setUsername('quizuser_test');
         $hashedPassword = $this->passwordHasher->hashPassword($this->user, 'password123');
         $this->user->setPassword($hashedPassword);
         $this->entityManager->persist($this->user);
         $this->entityManager->flush();
-
-        // Se connecter
-        $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
-            'email' => 'quiz@example.com',
-            'password' => 'password123'
-        ]));
-
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
     }
 
     protected function tearDown(): void
     {
+        if ($this->user) {
+            $this->entityManager->remove($this->user);
+            $this->entityManager->flush();
+        }
         parent::tearDown();
         $this->entityManager->close();
         $this->entityManager = null;
@@ -55,7 +54,6 @@ class QuizFunctionalTest extends WebTestCase
     {
         $quizData = [
             'title' => 'Test Quiz',
-            'description' => 'A test quiz',
             'theme' => 'Test Theme',
             'questions' => [
                 [
@@ -76,7 +74,9 @@ class QuizFunctionalTest extends WebTestCase
         ];
 
         $this->client->request('POST', '/api/quiz', [], [], [
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_CONTENT_TYPE' => 'application/json',
+            'HTTP_ACCEPT' => 'application/json'
         ], json_encode($quizData));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -88,16 +88,20 @@ class QuizFunctionalTest extends WebTestCase
 
     public function testGetQuiz(): void
     {
-        // Créer un quiz pour le test
+        // Create a quiz for testing
         $quiz = new Quiz();
         $quiz->setTitle('Test Quiz');
-        $quiz->setDescription('A test quiz');
         $quiz->setTheme('Test Theme');
         $quiz->setAuthor($this->user);
         $this->entityManager->persist($quiz);
         $this->entityManager->flush();
 
-        $this->client->request('GET', '/api/quiz/' . $quiz->getId());
+        $quizId = $quiz->getId();
+
+        // Make sure the user exists in the database
+        $this->entityManager->refresh($this->user);
+
+        $this->client->request('GET', '/api/quiz/' . $quizId);
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
         $response = json_decode($this->client->getResponse()->getContent(), true);
@@ -106,11 +110,10 @@ class QuizFunctionalTest extends WebTestCase
 
     public function testListQuizzes(): void
     {
-        // Créer quelques quiz pour le test
+        // Create some quizzes for testing
         for ($i = 1; $i <= 3; $i++) {
             $quiz = new Quiz();
             $quiz->setTitle('Test Quiz ' . $i);
-            $quiz->setDescription('A test quiz');
             $quiz->setTheme('Test Theme');
             $quiz->setAuthor($this->user);
             $this->entityManager->persist($quiz);
@@ -127,10 +130,9 @@ class QuizFunctionalTest extends WebTestCase
 
     public function testUpdateQuiz(): void
     {
-        // Créer un quiz pour le test
+        // Create a quiz for testing
         $quiz = new Quiz();
         $quiz->setTitle('Test Quiz');
-        $quiz->setDescription('A test quiz');
         $quiz->setTheme('Test Theme');
         $quiz->setAuthor($this->user);
         $this->entityManager->persist($quiz);
@@ -138,7 +140,6 @@ class QuizFunctionalTest extends WebTestCase
 
         $updateData = [
             'title' => 'Updated Quiz',
-            'description' => 'An updated quiz',
             'theme' => 'Updated Theme'
         ];
 
@@ -153,10 +154,9 @@ class QuizFunctionalTest extends WebTestCase
 
     public function testDeleteQuiz(): void
     {
-        // Créer un quiz pour le test
+        // Create a quiz for testing
         $quiz = new Quiz();
         $quiz->setTitle('Test Quiz');
-        $quiz->setDescription('A test quiz');
         $quiz->setTheme('Test Theme');
         $quiz->setAuthor($this->user);
         $this->entityManager->persist($quiz);

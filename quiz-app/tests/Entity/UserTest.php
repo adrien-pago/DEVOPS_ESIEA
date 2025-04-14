@@ -43,19 +43,17 @@ class UserTest extends TestCase
     public function testUserQuizzes(): void
     {
         $quiz = new Quiz();
-        $quiz->setTitle('Test Quiz Title');
+        $quiz->setTitle('Test Quiz');
         $quiz->setTheme('Test Theme');
-        
+        $quiz->setAuthor($this->user);
+
+        $this->assertCount(0, $this->user->getQuizzes());
         $this->user->addQuiz($quiz);
-        
         $this->assertCount(1, $this->user->getQuizzes());
         $this->assertTrue($this->user->getQuizzes()->contains($quiz));
-        $this->assertEquals($this->user, $quiz->getCreator());
-        
+
         $this->user->removeQuiz($quiz);
-        
         $this->assertCount(0, $this->user->getQuizzes());
         $this->assertFalse($this->user->getQuizzes()->contains($quiz));
-        $this->assertNull($quiz->getCreator());
     }
 } 

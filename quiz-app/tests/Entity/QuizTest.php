@@ -22,7 +22,7 @@ class QuizTest extends TestCase
         $this->quiz = new Quiz();
         $this->quiz->setTitle('Test Quiz Title');
         $this->quiz->setTheme('Test Theme');
-        $this->quiz->setCreator($this->user);
+        $this->quiz->setAuthor($this->user);
     }
 
     public function testQuizCreation(): void
@@ -31,7 +31,7 @@ class QuizTest extends TestCase
         $this->assertEquals('Test Quiz Title', $this->quiz->getTitle());
         $this->assertEquals('Test Theme', $this->quiz->getTheme());
         $this->assertFalse($this->quiz->isModerated());
-        $this->assertEquals($this->user, $this->quiz->getCreator());
+        $this->assertEquals($this->user, $this->quiz->getAuthor());
     }
 
     public function testQuizModeration(): void
@@ -40,15 +40,15 @@ class QuizTest extends TestCase
         $this->assertTrue($this->quiz->isModerated());
     }
 
-    public function testQuizCreator(): void
+    public function testQuizAuthor(): void
     {
-        $newUser = new User();
-        $newUser->setUsername('newuser');
-        $newUser->setEmail('newuser@example.com');
-        $newUser->setPassword('password456');
-
-        $this->quiz->setCreator($newUser);
-        $this->assertEquals($newUser, $this->quiz->getCreator());
+        $user = new User();
+        $user->setUsername('testuser');
+        $user->setEmail('testuser@example.com');
+        $user->setPassword('password123');
+        
+        $this->quiz->setAuthor($user);
+        $this->assertSame($user, $this->quiz->getAuthor());
     }
 
     public function testCalculateScoreWithNoQuestions(): void

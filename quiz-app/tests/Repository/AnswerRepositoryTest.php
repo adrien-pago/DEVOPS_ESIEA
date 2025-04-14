@@ -33,14 +33,16 @@ class AnswerRepositoryTest extends KernelTestCase
         // Create a user first
         $user = new User();
         $user->setUsername('testuser');
+        $user->setEmail('test@example.com');
         $user->setPassword('password123');
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
         // Create test data
         $quiz = new Quiz();
+        $quiz->setTitle('Test Quiz');
         $quiz->setTheme('Test Theme');
-        $quiz->setCreator($user);
+        $quiz->setAuthor($user);
         $this->entityManager->persist($quiz);
 
         $question = new Question();
@@ -53,11 +55,15 @@ class AnswerRepositoryTest extends KernelTestCase
         $answer1 = new Answer();
         $answer1->setQuestion($question);
         $answer1->setIsCorrect(true);
+        $answer1->setText('Answer 1');
+        $answer1->setSelectedChoice(0);
         $this->entityManager->persist($answer1);
 
         $answer2 = new Answer();
         $answer2->setQuestion($question);
         $answer2->setIsCorrect(false);
+        $answer2->setText('Answer 2');
+        $answer2->setSelectedChoice(1);
         $this->entityManager->persist($answer2);
 
         $this->entityManager->flush();
@@ -74,14 +80,16 @@ class AnswerRepositoryTest extends KernelTestCase
         // Create a user first
         $user = new User();
         $user->setUsername('testuser');
+        $user->setEmail('test@example.com');
         $user->setPassword('password123');
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
         // Create test data
         $quiz = new Quiz();
+        $quiz->setTitle('Test Quiz');
         $quiz->setTheme('Test Theme');
-        $quiz->setCreator($user);
+        $quiz->setAuthor($user);
         $this->entityManager->persist($quiz);
 
         $question = new Question();
@@ -94,16 +102,22 @@ class AnswerRepositoryTest extends KernelTestCase
         $answer1 = new Answer();
         $answer1->setQuestion($question);
         $answer1->setIsCorrect(true);
+        $answer1->setText('Answer 1');
+        $answer1->setSelectedChoice(0);
         $this->entityManager->persist($answer1);
 
         $answer2 = new Answer();
         $answer2->setQuestion($question);
         $answer2->setIsCorrect(true);
+        $answer2->setText('Answer 2');
+        $answer2->setSelectedChoice(1);
         $this->entityManager->persist($answer2);
 
         $answer3 = new Answer();
         $answer3->setQuestion($question);
         $answer3->setIsCorrect(false);
+        $answer3->setText('Answer 3');
+        $answer3->setSelectedChoice(2);
         $this->entityManager->persist($answer3);
 
         $this->entityManager->flush();

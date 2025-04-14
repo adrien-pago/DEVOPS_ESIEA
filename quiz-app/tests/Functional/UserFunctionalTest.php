@@ -3,7 +3,6 @@
 namespace App\Tests\Functional;
 
 use App\Entity\User;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,14 +13,13 @@ class UserFunctionalTest extends WebTestCase
     private $client;
     private $entityManager;
     private $passwordHasher;
-    private $userRepository;
 
     protected function setUp(): void
     {
+        parent::setUp();
         $this->client = static::createClient();
         $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $this->passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
-        $this->userRepository = static::getContainer()->get(UserRepository::class);
     }
 
     protected function tearDown(): void
@@ -34,90 +32,110 @@ class UserFunctionalTest extends WebTestCase
 
     public function testUserRegistration(): void
     {
-        $this->client->request('POST', '/api/register', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
-            'email' => 'register@example.com',
-            'password' => 'password123',
-            'username' => 'testuser'
-        ]));
+        $userData = [
+            'email' => 'register_test@example.com',
+            'username' => 'registeruser',
+            'password' => 'password123'
+        ];
+
+        $this->client->request('POST', '/api/register', [], [], [
+            'CONTENT_TYPE' => 'application/json'
+        ], json_encode($userData));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
         $response = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('id', $response);
+        $this->assertArrayHasKey('message', $response);
     }
 
     public function testUserLogin(): void
     {
-        // Créer un utilisateur pour le test
+        // Create a user first
         $user = new User();
-        $user->setEmail('login@example.com');
+        $user->setEmail('login_test@example.com');
         $user->setUsername('loginuser');
         $hashedPassword = $this->passwordHasher->hashPassword($user, 'password123');
         $user->setPassword($hashedPassword);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        // Tenter de se connecter
-        $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
-            'email' => 'login@example.com',
-            'password' => 'password123'
-        ]));
+        // Set up basic auth
+        $this->client->setServerParameters([
+            'PHP_AUTH_USER' => 'login_test@example.com',
+            'PHP_AUTH_PW' => 'password123'
+        ]);
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        // Try to access a protected route
+        $this->client->request('GET', '/api/user/profile');
+
+        $this->assertResponseIsSuccessful();
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('email', $response);
+        $this->assertEquals('login_test@example.com', $response['email']);
+
+        // Clean up
+        $this->entityManager->remove($user);
+        $this->entityManager->flush();
     }
 
     public function testProtectedRoute(): void
     {
-        // Créer un utilisateur pour le test
+        // Create a user first
         $user = new User();
-        $user->setEmail('protected@example.com');
+        $user->setEmail('protected_test@example.com');
         $user->setUsername('protecteduser');
         $hashedPassword = $this->passwordHasher->hashPassword($user, 'password123');
         $user->setPassword($hashedPassword);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        // Se connecter
-        $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
-            'email' => 'protected@example.com',
-            'password' => 'password123'
-        ]));
+        // Set up basic auth
+        $this->client->setServerParameters([
+            'PHP_AUTH_USER' => 'protected_test@example.com',
+            'PHP_AUTH_PW' => 'password123'
+        ]);
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-
-        // Accéder à une route protégée
         $this->client->request('GET', '/api/user/profile');
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseIsSuccessful();
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('email', $response);
+
+        // Clean up
+        $this->entityManager->remove($user);
+        $this->entityManager->flush();
     }
 
     public function testUserProfileUpdate(): void
     {
-        // Créer un utilisateur pour le test
+        // Create a user first
         $user = new User();
-        $user->setEmail('update@example.com');
+        $user->setEmail('update_test@example.com');
         $user->setUsername('updateuser');
         $hashedPassword = $this->passwordHasher->hashPassword($user, 'password123');
         $user->setPassword($hashedPassword);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        // Se connecter
-        $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
-            'email' => 'update@example.com',
-            'password' => 'password123'
-        ]));
+        // Set up basic auth
+        $this->client->setServerParameters([
+            'PHP_AUTH_USER' => 'update_test@example.com',
+            'PHP_AUTH_PW' => 'password123'
+        ]);
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $updateData = [
+            'username' => 'updateduser'
+        ];
 
-        // Mettre à jour le profil
         $this->client->request('PUT', '/api/user/profile', [], [], [
             'CONTENT_TYPE' => 'application/json'
-        ], json_encode([
-            'username' => 'updatedusername'
-        ]));
+        ], json_encode($updateData));
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseIsSuccessful();
         $response = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertEquals('updatedusername', $response['username']);
+        $this->assertEquals('updateduser', $response['username']);
+
+        // Clean up
+        $this->entityManager->remove($user);
+        $this->entityManager->flush();
     }
 } 

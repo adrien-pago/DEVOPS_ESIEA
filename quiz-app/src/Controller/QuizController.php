@@ -36,30 +36,99 @@ class QuizController extends AbstractController
         $quiz->setTitle($data['title']);
         $quiz->setTheme($data['theme']);
         $quiz->setModerated(false);
+        $quiz->setAuthor($this->getUser());
 
         foreach ($data['questions'] as $questionData) {
             $question = new Question();
             $question->setText($questionData['text']);
-            $question->setQuiz($quiz);
+            $quiz->addQuestion($question);
 
-            foreach ($questionData['answers'] as $answerData) {
+            foreach ($questionData['answers'] as $index => $answerData) {
                 $answer = new Answer();
                 $answer->setText($answerData['text']);
                 $answer->setIsCorrect($answerData['isCorrect']);
-                $answer->setQuestion($question);
+                $answer->setSelectedChoice($index);
+                $question->addAnswer($answer);
+                $this->entityManager->persist($answer);
             }
+            $this->entityManager->persist($question);
         }
 
         $this->entityManager->persist($quiz);
         $this->entityManager->flush();
 
-        return $this->json(['id' => $quiz->getId()], Response::HTTP_CREATED);
+        return $this->json($quiz, Response::HTTP_CREATED, [], ['groups' => ['quiz:read']]);
+    }
+
+    #[Route('', name: 'quiz_list', methods: ['GET'])]
+    public function list(): JsonResponse
+    {
+        try {
+            $qb = $this->entityManager->createQueryBuilder();
+            $qb->select('q')
+               ->from(Quiz::class, 'q')
+               ->where('q.author IS NOT NULL');
+            
+            $quizzes = $qb->getQuery()->getResult();
+            return $this->json($quizzes, Response::HTTP_OK, [], ['groups' => ['quiz:read']]);
+        } catch (\Doctrine\ORM\EntityNotFoundException $e) {
+            return $this->json(['message' => 'Some quizzes have authors that no longer exist'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     #[Route('/{id}', name: 'quiz_show', methods: ['GET'])]
     public function show(Quiz $quiz): JsonResponse
     {
-        return $this->json($quiz);
+        try {
+            return $this->json($quiz, Response::HTTP_OK, [], ['groups' => ['quiz:read']]);
+        } catch (\Doctrine\ORM\EntityNotFoundException $e) {
+            return $this->json(['message' => 'Quiz not found or author no longer exists'], Response::HTTP_NOT_FOUND);
+        }
+    }
+
+    #[Route('/{id}', name: 'quiz_update', methods: ['PUT'])]
+    public function update(Request $request, Quiz $quiz): JsonResponse
+    {
+        try {
+            // Check if the current user is the author of the quiz
+            if ($quiz->getAuthor() !== $this->getUser()) {
+                return $this->json(['message' => 'You are not authorized to update this quiz'], Response::HTTP_FORBIDDEN);
+            }
+
+            $data = json_decode($request->getContent(), true);
+            
+            if (isset($data['title'])) {
+                $quiz->setTitle($data['title']);
+            }
+            
+            if (isset($data['theme'])) {
+                $quiz->setTheme($data['theme']);
+            }
+            
+            $this->entityManager->flush();
+            
+            return $this->json($quiz, Response::HTTP_OK, [], ['groups' => ['quiz:read']]);
+        } catch (\Doctrine\ORM\EntityNotFoundException $e) {
+            return $this->json(['message' => 'Quiz not found or author no longer exists'], Response::HTTP_NOT_FOUND);
+        }
+    }
+
+    #[Route('/{id}', name: 'quiz_delete', methods: ['DELETE'])]
+    public function delete(Quiz $quiz): JsonResponse
+    {
+        try {
+            // Check if the current user is the author of the quiz
+            if ($quiz->getAuthor() !== $this->getUser()) {
+                return $this->json(['message' => 'You are not authorized to delete this quiz'], Response::HTTP_FORBIDDEN);
+            }
+
+            $this->entityManager->remove($quiz);
+            $this->entityManager->flush();
+
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        } catch (\Doctrine\ORM\EntityNotFoundException $e) {
+            return $this->json(['message' => 'Quiz not found or author no longer exists'], Response::HTTP_NOT_FOUND);
+        }
     }
 
     #[Route('/{id}/moderate', name: 'quiz_moderate', methods: ['PUT'])]
@@ -78,6 +147,12 @@ class QuizController extends AbstractController
         $answers = $data['answers'];
         
         $totalQuestions = count($quiz->getQuestions());
+        if ($totalQuestions === 0) {
+            return $this->json([
+                'error' => 'Cannot submit answers for a quiz with no questions',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         $correctAnswers = 0;
 
         foreach ($answers as $answerData) {

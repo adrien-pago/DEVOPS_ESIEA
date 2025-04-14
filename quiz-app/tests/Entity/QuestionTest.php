@@ -5,6 +5,7 @@ namespace App\Tests\Entity;
 use App\Entity\Question;
 use App\Entity\Quiz;
 use App\Entity\User;
+use App\Entity\Answer;
 use PHPUnit\Framework\TestCase;
 
 class QuestionTest extends TestCase
@@ -56,9 +57,26 @@ class QuestionTest extends TestCase
         $quiz = new Quiz();
         $quiz->setTitle('Test Quiz Title');
         $quiz->setTheme('Géographie');
-        $quiz->setCreator($user);
+        $quiz->setAuthor($user);
         
         $this->question->setQuiz($quiz);
         $this->assertSame($quiz, $this->question->getQuiz());
+    }
+
+    public function testQuestionAnswers(): void
+    {
+        $answer1 = new Answer();
+        $answer1->setSelectedChoice(0);
+        $answer1->setIsCorrect(true);
+        $this->question->addAnswer($answer1);
+
+        $answer2 = new Answer();
+        $answer2->setSelectedChoice(1);
+        $answer2->setIsCorrect(false);
+        $this->question->addAnswer($answer2);
+
+        $this->assertCount(2, $this->question->getAnswers());
+        $this->assertTrue($this->question->getAnswers()->first()->isCorrect());
+        $this->assertFalse($this->question->getAnswers()->last()->isCorrect());
     }
 } 
