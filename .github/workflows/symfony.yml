@@ -57,6 +57,13 @@ jobs:
         composer install --no-interaction --prefer-dist --verbose
         composer show
 
+    - name: Wait for MySQL
+      run: |
+        until mysql -h 127.0.0.1 -u root -proot -e "SELECT 1"; do
+          echo "Waiting for MySQL to be ready..."
+          sleep 1
+        done
+
     - name: Create Database
       run: |
         php bin/console doctrine:database:create --env=test --if-not-exists
