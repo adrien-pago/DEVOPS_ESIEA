@@ -4,16 +4,23 @@ namespace App\Tests\Entity;
 
 use App\Entity\Quiz;
 use App\Entity\Question;
+use App\Entity\User;
 use PHPUnit\Framework\TestCase;
 
 class QuizTest extends TestCase
 {
     private Quiz $quiz;
+    private User $user;
 
     protected function setUp(): void
     {
+        $this->user = new User();
+        $this->user->setUsername('testuser');
+        $this->user->setPassword('password123');
+
         $this->quiz = new Quiz();
         $this->quiz->setTheme('Test Theme');
+        $this->quiz->setCreator($this->user);
     }
 
     public function testQuizCreation(): void
@@ -21,12 +28,23 @@ class QuizTest extends TestCase
         $this->assertInstanceOf(Quiz::class, $this->quiz);
         $this->assertEquals('Test Theme', $this->quiz->getTheme());
         $this->assertFalse($this->quiz->isModerated());
+        $this->assertEquals($this->user, $this->quiz->getCreator());
     }
 
     public function testQuizModeration(): void
     {
         $this->quiz->setModerated(true);
         $this->assertTrue($this->quiz->isModerated());
+    }
+
+    public function testQuizCreator(): void
+    {
+        $newUser = new User();
+        $newUser->setUsername('newuser');
+        $newUser->setPassword('password456');
+
+        $this->quiz->setCreator($newUser);
+        $this->assertEquals($newUser, $this->quiz->getCreator());
     }
 
     public function testCalculateScoreWithNoQuestions(): void

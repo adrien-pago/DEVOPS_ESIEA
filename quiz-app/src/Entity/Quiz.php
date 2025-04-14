@@ -21,6 +21,10 @@ class Quiz
     #[ORM\Column]
     private ?bool $moderated = false;
 
+    #[ORM\ManyToOne(inversedBy: 'quizzes')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $creator = null;
+
     #[ORM\OneToMany(mappedBy: 'quiz', targetEntity: Question::class, orphanRemoval: true)]
     private Collection $questions;
 
@@ -53,6 +57,17 @@ class Quiz
     public function setModerated(bool $moderated): static
     {
         $this->moderated = $moderated;
+        return $this;
+    }
+
+    public function getCreator(): ?User
+    {
+        return $this->creator;
+    }
+
+    public function setCreator(?User $creator): static
+    {
+        $this->creator = $creator;
         return $this;
     }
 
