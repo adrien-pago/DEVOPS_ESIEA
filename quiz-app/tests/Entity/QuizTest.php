@@ -16,9 +16,11 @@ class QuizTest extends TestCase
     {
         $this->user = new User();
         $this->user->setUsername('testuser');
+        $this->user->setEmail('testuser@example.com');
         $this->user->setPassword('password123');
 
         $this->quiz = new Quiz();
+        $this->quiz->setTitle('Test Quiz Title');
         $this->quiz->setTheme('Test Theme');
         $this->quiz->setCreator($this->user);
     }
@@ -26,6 +28,7 @@ class QuizTest extends TestCase
     public function testQuizCreation(): void
     {
         $this->assertInstanceOf(Quiz::class, $this->quiz);
+        $this->assertEquals('Test Quiz Title', $this->quiz->getTitle());
         $this->assertEquals('Test Theme', $this->quiz->getTheme());
         $this->assertFalse($this->quiz->isModerated());
         $this->assertEquals($this->user, $this->quiz->getCreator());
@@ -41,6 +44,7 @@ class QuizTest extends TestCase
     {
         $newUser = new User();
         $newUser->setUsername('newuser');
+        $newUser->setEmail('newuser@example.com');
         $newUser->setPassword('password456');
 
         $this->quiz->setCreator($newUser);

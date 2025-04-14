@@ -13,24 +13,29 @@ class UserTest extends TestCase
     protected function setUp(): void
     {
         $this->user = new User();
+        $this->user->setUsername('testuser');
+        $this->user->setEmail('testuser@example.com');
+        $this->user->setPassword('password123');
     }
 
     public function testUserCreation(): void
     {
         $this->assertInstanceOf(User::class, $this->user);
         $this->assertEmpty($this->user->getQuizzes());
+        $this->assertEquals('testuser', $this->user->getUsername());
+        $this->assertEquals('testuser@example.com', $this->user->getEmail());
     }
 
     public function testUserUsername(): void
     {
-        $username = 'testuser';
+        $username = 'newuser';
         $this->user->setUsername($username);
         $this->assertEquals($username, $this->user->getUsername());
     }
 
     public function testUserPassword(): void
     {
-        $password = 'password123';
+        $password = 'newpassword';
         $this->user->setPassword($password);
         $this->assertEquals($password, $this->user->getPassword());
     }
@@ -38,6 +43,7 @@ class UserTest extends TestCase
     public function testUserQuizzes(): void
     {
         $quiz = new Quiz();
+        $quiz->setTitle('Test Quiz Title');
         $quiz->setTheme('Test Theme');
         
         $this->user->addQuiz($quiz);

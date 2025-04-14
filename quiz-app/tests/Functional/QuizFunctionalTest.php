@@ -27,6 +27,7 @@ class QuizFunctionalTest extends WebTestCase
         // Créer un utilisateur de test
         $this->user = new User();
         $this->user->setEmail('test@example.com');
+        $this->user->setUsername('testuser');
         $this->user->setPassword('password123');
         $this->user->setRoles(['ROLE_USER']);
 
@@ -67,11 +68,8 @@ class QuizFunctionalTest extends WebTestCase
             'questions' => [
                 [
                     'text' => 'Test Question 1',
-                    'answers' => [
-                        ['text' => 'Answer 1', 'isCorrect' => true],
-                        ['text' => 'Answer 2', 'isCorrect' => false],
-                        ['text' => 'Answer 3', 'isCorrect' => false]
-                    ]
+                    'choices' => ['Answer 1', 'Answer 2', 'Answer 3'],
+                    'correctChoice' => 0
                 ]
             ]
         ]));
@@ -94,15 +92,13 @@ class QuizFunctionalTest extends WebTestCase
         $quiz = new Quiz();
         $quiz->setTitle('Test Quiz');
         $quiz->setTheme('Test Theme');
+        $quiz->setCreator($this->user);
         
         $question = new Question();
         $question->setText('Test Question');
         $question->setQuiz($quiz);
-        
-        $answer = new Answer();
-        $answer->setText('Test Answer');
-        $answer->setIsCorrect(true);
-        $answer->setQuestion($question);
+        $question->setChoices(['Choice 1', 'Choice 2', 'Choice 3']);
+        $question->setCorrectChoice(0);
         
         $this->entityManager->persist($quiz);
         $this->entityManager->flush();
@@ -123,7 +119,14 @@ class QuizFunctionalTest extends WebTestCase
         $quiz = new Quiz();
         $quiz->setTitle('Test Quiz');
         $quiz->setTheme('Test Theme');
+        $quiz->setCreator($this->user);
         $quiz->setModerated(false);
+        
+        $question = new Question();
+        $question->setText('Test Question');
+        $question->setQuiz($quiz);
+        $question->setChoices(['Choice 1', 'Choice 2', 'Choice 3']);
+        $question->setCorrectChoice(0);
         
         $this->entityManager->persist($quiz);
         $this->entityManager->flush();
@@ -143,20 +146,13 @@ class QuizFunctionalTest extends WebTestCase
         $quiz = new Quiz();
         $quiz->setTitle('Test Quiz');
         $quiz->setTheme('Test Theme');
+        $quiz->setCreator($this->user);
         
         $question = new Question();
         $question->setText('Test Question');
         $question->setQuiz($quiz);
-        
-        $correctAnswer = new Answer();
-        $correctAnswer->setText('Correct Answer');
-        $correctAnswer->setIsCorrect(true);
-        $correctAnswer->setQuestion($question);
-        
-        $wrongAnswer = new Answer();
-        $wrongAnswer->setText('Wrong Answer');
-        $wrongAnswer->setIsCorrect(false);
-        $wrongAnswer->setQuestion($question);
+        $question->setChoices(['Choice 1', 'Choice 2', 'Choice 3']);
+        $question->setCorrectChoice(0);
         
         $this->entityManager->persist($quiz);
         $this->entityManager->flush();
@@ -166,7 +162,7 @@ class QuizFunctionalTest extends WebTestCase
             'answers' => [
                 [
                     'questionId' => $question->getId(),
-                    'answerId' => $correctAnswer->getId()
+                    'selectedChoice' => 0
                 ]
             ]
         ]));

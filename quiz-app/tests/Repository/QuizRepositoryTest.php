@@ -4,6 +4,7 @@ namespace App\Tests\Repository;
 
 use App\Entity\Quiz;
 use App\Entity\User;
+use App\Entity\Question;
 use App\Repository\QuizRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -37,10 +38,21 @@ class QuizRepositoryTest extends KernelTestCase
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
+        // Create a quiz with all required fields
         $quiz = new Quiz();
+        $quiz->setTitle('Test Quiz Title');
         $quiz->setTheme('Géographie');
         $quiz->setCreator($user);
         $quiz->setModerated(true);
+
+        // Create a question with all required fields
+        $question = new Question();
+        $question->setText('Test Question Text');
+        $question->setQuiz($quiz);
+        $question->setChoices(['Choice 1', 'Choice 2', 'Choice 3']);
+        $question->setCorrectChoice(0);
+        
+        $quiz->addQuestion($question);
 
         $this->entityManager->persist($quiz);
         $this->entityManager->flush();
@@ -60,10 +72,21 @@ class QuizRepositoryTest extends KernelTestCase
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
+        // Create a quiz with all required fields
         $quiz = new Quiz();
+        $quiz->setTitle('Test Quiz Title');
         $quiz->setTheme('Histoire');
         $quiz->setCreator($user);
         $quiz->setModerated(true);
+
+        // Create a question with all required fields
+        $question = new Question();
+        $question->setText('Test Question Text');
+        $question->setQuiz($quiz);
+        $question->setChoices(['Choice 1', 'Choice 2', 'Choice 3']);
+        $question->setCorrectChoice(0);
+        
+        $quiz->addQuestion($question);
 
         $this->entityManager->persist($quiz);
         $this->entityManager->flush();

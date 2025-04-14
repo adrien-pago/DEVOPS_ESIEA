@@ -4,6 +4,7 @@ namespace App\Tests\Entity;
 
 use App\Entity\Question;
 use App\Entity\Quiz;
+use App\Entity\User;
 use PHPUnit\Framework\TestCase;
 
 class QuestionTest extends TestCase
@@ -47,8 +48,15 @@ class QuestionTest extends TestCase
 
     public function testQuestionQuiz(): void
     {
+        $user = new User();
+        $user->setUsername('testuser');
+        $user->setEmail('testuser@example.com');
+        $user->setPassword('password123');
+        
         $quiz = new Quiz();
+        $quiz->setTitle('Test Quiz Title');
         $quiz->setTheme('Géographie');
+        $quiz->setCreator($user);
         
         $this->question->setQuiz($quiz);
         $this->assertSame($quiz, $this->question->getQuiz());
