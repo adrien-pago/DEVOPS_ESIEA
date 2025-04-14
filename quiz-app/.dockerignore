@@ -1,0 +1,14 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.prod
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+Dockerfile.*
+README.md
+tests/
+var/cache/*
+var/log/*
+vendor/* 
