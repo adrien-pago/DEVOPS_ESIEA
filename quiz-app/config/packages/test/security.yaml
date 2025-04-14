@@ -24,7 +24,7 @@ security:
                 password_path: password
             jwt: false
             remember_me:
-                secret: '%kernel.secret%'
+                secret: 'test_secret_key_for_remember_me'
                 lifetime: 604800
                 path: /
             logout:

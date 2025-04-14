@@ -23,9 +23,6 @@ Pour assurer la qualité d'une application, il est essentiel de mettre en place 
 - Des **tests fonctionnels** pour valider que l'application répond aux besoins métier et se comporte comme prévu lors des scénarios d'utilisation.
 - Des **tests de sécurité** pour identifier et corriger les vulnérabilités (comme les injections SQL, les failles XSS, etc.).
 
-
-
-
 ## Description
 Application de quiz en ligne développée avec Symfony, suivant les principes DevOps.
 
