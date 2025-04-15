@@ -30,7 +30,7 @@ Application de quiz en ligne développée avec Symfony, suivant les principes De
 - Symfony 6.4
 - Docker
 - PHP 8.2
-- MySQL
+- SQLite
 - PHPUnit pour les tests
 
 ## Structure du projet
